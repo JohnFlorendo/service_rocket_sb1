@@ -29,17 +29,18 @@ function(search, redirect,runtime, render, libHelper) {
          var oldRecord = scriptContext.oldRecord;
          var currScript = runtime.getCurrentScript();
         if(scriptContext.type == 'create'){
-            var invStatus = newRecord.getValue({fieldId: 'custbody_leacc_invoice_status'}); // 1- Draft ;2- ready to invoice
-            if((invStatus == 1 || invStatus == 2)){
+            // var invStatus = newRecord.getValue({fieldId: 'custbody_leacc_invoice_status'}); // 1- Draft ;2- ready to invoice
+            // if((invStatus == 1 || invStatus == 2)){
                 var paramFolderId = currScript.getParameter('custscript_sr_ue_yp_param_folder');
 
                 var folderId = (paramFolderId) ? paramFolderId : originalFolderId;
                 if(newRecord.id){
                     libHelper.generatePDF(newRecord.id,folderId);
                 }
-            }
+            // }
         }
         else if(scriptContext.type == 'edit' || scriptContext.type == 'xedit'){
+            log.debug('Edit Invoice!');
             var invStatus = newRecord.getValue({fieldId: 'custbody_leacc_invoice_status'}); // 1- Draft ;2- ready to invoice
             var oldAmt= oldRecord.getValue({fieldId: 'amount'});
             var oldEntity= oldRecord.getValue({fieldId: 'entity'});
@@ -48,19 +49,27 @@ function(search, redirect,runtime, render, libHelper) {
             var oldPostP= oldRecord.getValue({fieldId: 'postingperiod'});
             var oldTerms= oldRecord.getValue({fieldId: 'terms'});
             var oldBillAddress= oldRecord.getValue({fieldId: 'billaddress'});
+            var newInvoiceNumber = newRecord.getValue({fieldId: 'tranid'});
+            var oldInvoiceNumber = oldRecord.getValue({fieldId: 'tranid'});
+            log.debug('Invoice Number', 'new: ' + newInvoiceNumber + ' --- old: ' + oldInvoiceNumber);
 
-            if((invStatus == 1 || invStatus == 2) && (oldAmt != newRecord.getValue({fieldId: 'amount'}) || oldDuedate != newRecord.getValue({fieldId: 'duedate'}) || oldTrandate != newRecord.getValue({fieldId: 'trandate'}) || oldBillAddress != newRecord.getValue({fieldId: 'billaddress'}) || oldTerms != newRecord.getValue({fieldId: 'terms'}) || oldPostP != newRecord.getValue({fieldId: 'postingperiod'}) || oldEntity != newRecord.getValue({fieldId: 'entity'}) )){
-
+            // if((invStatus == 1 || invStatus == 2) && (oldAmt != newRecord.getValue({fieldId: 'amount'})
+            //     || oldDuedate != newRecord.getValue({fieldId: 'duedate'}) || oldTrandate != newRecord.getValue({fieldId: 'trandate'})
+            //     || oldBillAddress != newRecord.getValue({fieldId: 'billaddress'}) || oldTerms != newRecord.getValue({fieldId: 'terms'})
+            //     || oldPostP != newRecord.getValue({fieldId: 'postingperiod'}) || oldEntity != newRecord.getValue({fieldId: 'entity'}) )){
+            if (newInvoiceNumber != oldInvoiceNumber){
                 var paramFolderId = currScript.getParameter('custscript_sr_ue_yp_param_folder');
 
                 var folderId = (paramFolderId) ? paramFolderId : originalFolderId;
+                log.debug('folderId', folderId);
                 /*log.debug('interbal id ',newRecord.id);
                 log.debug('folderId',folderId)*/
                 if(newRecord.id){
+                    log.debug('generatePDF');
                     libHelper.generatePDF(newRecord.id,folderId);
                 }
-                
             }
+            // }
         }
     }
 
@@ -69,5 +78,5 @@ function(search, redirect,runtime, render, libHelper) {
         afterSubmit: afterSubmit,
         beforeSubmit: beforeSubmit
     };
-    
+
 });

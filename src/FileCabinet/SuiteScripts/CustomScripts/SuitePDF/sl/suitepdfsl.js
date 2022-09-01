@@ -3,9 +3,9 @@
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/file', 'N/redirect', 'N/task', '../api/estimate', '../api/estimatetest', '../api/invoice', '../api/letter', '../api/lib/promotionletter'],
+define(['N/record', 'N/file', 'N/redirect', 'N/task', '../api/estimate', '../api/estimatetest', '../api/invoice', '../api/letter', '../api/lib/promotionletter', '../api/listpdf'],
 
-function(record, file, redirect, task, estimate, estimatetest, invoice, letter, promotionletter) {
+function(record, file, redirect, task, estimate, estimatetest, invoice, letter, promotionletter, listpdf) {
    
     /**
      * Definition of the Suitelet script trigger point.
@@ -169,6 +169,13 @@ function(record, file, redirect, task, estimate, estimatetest, invoice, letter, 
 			});
 			
 			sPdfTemplate = objFile.file;
+			context.response.renderPdf(sPdfTemplate); 
+    	}
+    	else if(sType == 'allowancetable'){
+    		
+			var sPdfTemplate = listpdf.generateAllowanceTable();
+			
+			
 			context.response.renderPdf(sPdfTemplate); 
     	}
 		

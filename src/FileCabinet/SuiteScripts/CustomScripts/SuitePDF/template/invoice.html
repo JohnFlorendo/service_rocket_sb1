@@ -9,6 +9,9 @@
                <table style="width:100%; background-color: #221F1F;">
                   <tr width="100%">
                      <td  width="20%" style="padding-left: 0.4in; padding-top: 8px;"><img src="https://3688201.app.netsuite.com/core/media/media.nl?id=63646&amp;c=3688201&amp;h=cc450deee8b4151f2fd5&amp;fcts=20200601062629&amp;whence=" width="80px" height="57px"/></td>
+                     <td  width="80%" style="padding-left:1.1in;  padding-top: 8px; color: white; font-size : 13px;margin-right: -90px; white-space: nowrap;">
+                        {{exportnote}}
+                     </td>
                      <td  width="50%" style="padding-right: 0.4in; padding-top: 10px;" >
                         <table style="color: white; width: 100%; ">
                            <tr>
@@ -18,7 +21,9 @@
                            </tr>
                            <tr  style="padding-top: -10px;">
                               <td align="right" style="font-size : 14px;">
-                                 <p style="text-align: right; word-wrap: break-word">{{federalidnumber}}</p>
+                                 <p style="text-align: right; word-wrap: break-word">
+                                    {{federalidnumber}}
+                                 </p>
                               </td>
                            </tr>
                         </table>
@@ -31,7 +36,7 @@
             </macro>
          </macrolist>
          <style type="text/css">
-            * 
+            *
             {
             font-family: NotoSans, Arial,sans-serif;
             }
@@ -63,10 +68,10 @@
             height: 1px;
             }
             .itemtable {
-	            width: 100%; 
-    	        margin-top: 10px; 
-        	    margin-left: 0.4in; 
-            	margin-right: 0.4in; 
+	            width: 100%;
+    	        margin-top: 10px;
+        	    margin-left: 0.4in;
+            	margin-right: 0.4in;
             	font-size: 9pt;
             	table-layout: fixed;
             }
@@ -192,6 +197,7 @@
                      <table style="width:100%;">
                         <tr>
                            <td align="right">{{@root.custbody_unittype}}</td>
+<!--                           <td align="right">Qty</td>-->
                         </tr>
                      </table>
                   </th>
@@ -229,6 +235,7 @@
                </tr>
             </thead>
             <tbody>
+            {{#ifEquals subsidiary 'ServiceRocket Inc.'}}
                {{#item}}
                {{#if displayonpdf}}
                <tr style="background-color: {{if_even @index}};" >
@@ -261,6 +268,47 @@
                {{else}}
                {{/if}}
                {{/item}}
+            {{else}}
+               {{#item}}
+               {{#if displayonpdf}}
+               <tr style="background-color: {{if_even @index}};" >
+                  <td align="center" valign="middle" width="5%">
+                     {{no}}
+                  </td>
+                  <td>
+                     <p style="text-align: left">{{description}}</p>
+                  </td>
+                  <td align="right" valign="middle">{{quantity}}</td>
+                  <td align="right" valign="middle">{{rate}}</td>
+                  <td align="right" valign="middle">
+                     {{#if tax1amt}}
+                     {{tax1amt}}
+                     {{else}}
+                     0.00
+                     {{/if}}
+                  </td>
+   <!--               <td align="right" valign="middle">{{tax1amt}}</td>-->
+                  {{#if @root.haslinediscount}}
+                  <td align="right" valign="middle">
+                     <table padding= "0px">
+                        {{#discountdetail}}
+                        <tr padding= "0px">
+                           <td padding= "1px" align="right">{{{desctription}}}</td>
+                        </tr>
+                        <tr padding= "0px">
+                           <td padding= "1px" align="right">{{#replace "-" ""}}{{amount}}{{/replace}}</td>
+                        </tr>
+                        {{/discountdetail}}
+                     </table>
+                  </td>
+                  {{else}}
+                  {{/if}}
+                  <td align="right" valign="middle">{{amount}}</td>
+               </tr>
+               {{else}}
+               {{/if}}
+               {{/item}}
+            {{/ifEquals}}
             </tbody>
          </table>
          <table style="width:100%; margin-left: 0.4in; margin-right: 0.4in;">
@@ -280,12 +328,23 @@
                      </tr>
                      {{else}}
                      {{/if}}
+<!--                     {{#if hastax}}-->
+<!--                     <tr>-->
+<!--                        <td class="summarybox" >{{taxlabel}} </td>-->
+<!--                        <td class="summarybox" align="right">{{currencysymbol}} {{taxtotal}}</td>-->
+<!--                     </tr>-->
+<!--                     {{else}}-->
+<!--                     {{/if}}-->
                      {{#if hastax}}
                      <tr>
-                        <td class="summarybox" >{{taxlabel}} </td>
-                        <td class="summarybox" align="right">{{currencysymbol}} {{taxtotal}}</td>
+                        <td  >{{taxcode}} </td>
+                        <td  align="right">{{currencysymbol}} {{taxtotal}}</td>
                      </tr>
                      {{else}}
+                     <tr>
+                        <td  >{{taxcode}} </td>
+                        <td  align="right">{{currencysymbol}} {{discounttotal}}</td>
+                     </tr>
                      {{/if}}
                   </table>
                   <hr/>
@@ -309,7 +368,7 @@
                      </tr>
                      <tr>
                         <td>
-                           {{{custrecord_sr_address}}}
+                           {{{custrecord_sr_addresss}}}
                         </td>
                      </tr>
                   </table>
@@ -335,7 +394,7 @@
          </table>
       </body>
    </pdf>
-   
+
    {{#if custbody_sf_includecharges}}
    <pdf>
       <head>
@@ -393,7 +452,7 @@
                <!--FOOTER-->
             </macro>
          </macrolist>
-         <style type="text/css">* 
+         <style type="text/css">*
             {
             font-family: NotoSans, Arial,sans-serif;
             }
@@ -480,10 +539,10 @@
             height: 1px;
             }
             .itemtable {
-	            width: 100%; 
-    	        margin-top: 10px; 
-        	    margin-left: 0.4in; 
-            	margin-right: 0.4in; 
+	            width: 100%;
+    	        margin-top: 10px;
+        	    margin-left: 0.4in;
+            	margin-right: 0.4in;
             	font-size: 9pt;
             	table-layout: fixed;
             }
@@ -551,7 +610,7 @@
          <table class="itemtable">
             <thead>
                <tr style="background-color: #888888; color: #FFFFFF; font-weight: bold;">
-                  <th width="10%" valign="middle">                     
+                  <th width="10%" valign="middle">
                   	<table style="width:100%;">
                         <tr>
                            <td align="left">Date</td>

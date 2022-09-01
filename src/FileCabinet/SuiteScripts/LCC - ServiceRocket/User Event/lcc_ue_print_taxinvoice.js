@@ -18,7 +18,7 @@ define(['N/record','N/url'],
             var stOnCall = "window.open('" + urlLink+ "')" ;
             form.addButton({
                 id : 'custpage_taxinvoice',
-                label : 'Project Invoice',
+                label : 'Old Project Invoice',
                 functionName : stOnCall
             });
         }

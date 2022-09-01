@@ -2,9 +2,8 @@ SELECT employee.entityid AS name
 	, BUILTIN.DF(employee.subsidiary) AS subsidiary
 	, BUILTIN.DF(employee.job) AS jobprofile
 	, BUILTIN.DF(employee.employeetype) AS employeetype
-	, CASE WHEN employee.custentity_primarypractice IS NOT NULL THEN 
-		employee.custentity_primarypractice
-		ELSE BUILTIN.DF(employee.department) END AS practice
+	, classification.name AS class
+	, employee.custentity_primarypractice AS practice
 	, employee.custentity_joexpirydate AS expirydate
 	, BUILTIN.DF(employee.supervisor) AS supervisor
 	, BUILTIN.DF(employee.custentity_atlas_chr_hr_rep) AS hrmanager
@@ -14,7 +13,11 @@ SELECT employee.entityid AS name
 	, employee.compensationcurrency AS currency
 	, currency.displaysymbol AS  currencysymbol
 	, employee.hiredate AS startdate
-	, BUILTIN.DF(employee.location) AS location
+	, CASE WHEN entityaddress.state IS NOT NULL
+			THEN BUILTIN.DF(entityaddress.city) || ' ' || BUILTIN.DF(entityaddress.state)
+		ELSE 
+			BUILTIN.DF(entityaddress.city) 
+	  END AS location
 	, BUILTIN.DF(subsidiary.country) AS country
 	, BUILTIN.DF(classification.custrecord_plan_budget_owner) AS budgetowner
 	, stockoption.name AS commitnumber
@@ -27,6 +30,10 @@ INNER JOIN subsidiary
 	ON employee.subsidiary= subsidiary.id
 INNER JOIN classification
 	ON employee.class = classification.id
+INNER JOIN employeeaddressbook addressbook
+	ON employee.id = addressbook.entity
+INNER JOIN employeeaddressbookentityaddress entityaddress
+	ON addressbook.addressbookaddress = entityaddress.nkey
 LEFT JOIN customrecord_sr_stock_option_commit stockoption
 	ON employee.custentity_stockcommitment = stockoption.id
 WHERE employee.id = {{id}}

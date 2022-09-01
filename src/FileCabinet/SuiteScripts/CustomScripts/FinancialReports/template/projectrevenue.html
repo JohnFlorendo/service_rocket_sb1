@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <!-- css Bootstrap 3 -->
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css"/>
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.3/af-2.3.7/b-2.0.1/date-1.1.1/fc-4.0.1/fh-3.2.0/r-2.2.9/rg-1.1.4/sc-2.0.5/sb-1.3.0/sp-1.4.0/datatables.min.css"/>
+      <!-- css dataTables.bootstrap.min.css -->
+      <link rel="stylesheet" type="text/css" href="/core/media/media.nl?id=238381&c=3688201&h=I9fWmOJP6c4gn4h0tig3Rne5Frafa_afVNW5i2GJ6mTlF0pq&_xt=.css">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+      <!-- css rowGroup.dataTables.min.css -->
+      <link rel="stylesheet" type="text/css" href="/core/media/media.nl?id=237236&c=3688201&h=qMSYc8XHCBpwg90rZ8RhsDp3bXdsiA4mOlbxXzS256H_bCzw&_xt=.css">
+      <!-- css FixedHeader  -->
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.2.1/css/fixedHeader.dataTables.min.css"/>
+      <!-- css Datepicker  -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.css" />
+      <!-- js jQuery -->
+      <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+      <!-- js Datatable  -->
+      <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.3/af-2.3.7/b-2.0.1/date-1.1.1/fc-4.0.1/fh-3.2.0/r-2.2.9/rg-1.1.4/sc-2.0.5/sb-1.3.0/sp-1.4.0/datatables.min.js"></script>
+      <!-- js FixedHeader  -->  
+      <script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.2.1/js/dataTables.fixedHeader.min.js"></script>
+      <!-- js Buttons  -->  
+      <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+      <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+      <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+      <!-- js Datatable Boostrap 3-->
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/js/bootstrap.bundle.min.js"></script>
+      <!-- js Dates -->
+      <!-- <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script> -->
+      <script src="//cdn.datatables.net/plug-ins/1.10.19/sorting/date-eu.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+      <style type="text/css">
+         * {
+         font-size: 14px;
+         box-sizing: border-box;
+         }
+         ol,
+         ul {
+         padding-left: 0rem !important;
+         }
+         .text ul,
+         .text ol {
+         margin-left: 0px !important;
+         }
+         .nav {
+         display: flex !important;
+         }
+         .tab-content {
+         padding-left: 20px !important;
+         }
+         .table-caption {
+         caption-side: top;
+         width: auto;
+         text-align: center
+         }
+         .pagination {
+         display: flex !important;
+         list-style: none !important;
+         }
+         p.truncate {
+         width: 200px;
+         white-space: nowrap;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         resize: horizontal;
+         }
+         .noaccess {
+         display: block;
+         margin-left: auto;
+         margin-right: auto;
+         }
+         .loader {
+         position: absolute;
+         left: 50%;
+         top: 50%;
+         z-index: 1;
+         width: 120px;
+         height: 120px;
+         margin: -76px 0 0 -76px;
+         border: 16px solid #f3f3f3;
+         border-radius: 50%;
+         border-top: 16px solid #3498db;
+         -webkit-animation: spin 2s linear infinite;
+         animation: spin 2s linear infinite;
+         }
+         /* Safari */
+         @-webkit-keyframes spin {
+         0% { -webkit-transform: rotate(0deg); }
+         100% { -webkit-transform: rotate(360deg); }
+         }
+         @keyframes spin {
+         0% { transform: rotate(0deg); }
+         100% { transform: rotate(360deg); }
+         }
+         .dt-buttons {
+         margin-top: 20px;
+         }
+         .btn-secondary{
+         background-color:#eee;
+         color: #555;
+         padding-left:15px;
+         padding-right:15px;
+         border: 1px solid #E5E5E5;
+         }
+      </style>
+      <script type="text/javascript">
+         $(document).ready(function() {
+        	 
+        	 window.loaded = false;
+        	 window.group = {
+        		'Apps' : ''
+        	 };
+         	
+             $.get('/app/site/hosting/scriptlet.nl?script=1499&deploy=1&action=backend&currencyrate={{currencyrate}}', function (data) {
+             	
+             	$(".loader").hide();
+             	
+             	var arrDefs = [];
+             		
+                	if(data.hide.length > 0){
+                		arrDefs.push({
+                         visible: false,
+                         targets: data.hide
+                    	});
+                	}
+                	
+                	if(data.truncate.length > 0){
+                		arrDefs.push({
+                    		render: function ( data, type, row ) {
+                             return '<p class="truncate">' + data + '</p>';
+                         },
+                         targets: data.truncate	
+                    	});
+                	}
+
+                	if(data.numeric.length > 0){
+                		arrDefs.push({
+                			className: 'dt-body-center',
+                            render: DataTable.render.number(',', '.', 2, ''),
+                            targets: data.numeric
+                        });
+                	}
+    	
+                	
+                	if(data.link.length > 0){
+                		arrDefs.push({
+                    		render: function ( data, type, row ) {
+                    			var arrData = data.split('+')
+                    			
+                             return '<a target="_blank" href="'+ arrData[1] + '">' + arrData[0] + '</a>';
+                         },
+                         targets: data.link	
+                    	});
+                	}	
+                	
+                	if(data.currency.length > 0){
+        				arrDefs.push({
+        					className: 'dt-body-right',
+        					render: DataTable.render.number(',', '.', 2, ''),
+        					targets: data.currency
+        				});
+                	}	
+        
+                 var dtSuiteTable = $('#table-projectrevenue').DataTable({
+                 	responsive: false,	
+                    data: data.data,
+                    columns: data.header,
+                    pageLength: 25,
+                 	columnDefs: arrDefs,
+                    buttons: [
+                              'pageLength',
+                              'copy',
+                              'excel',
+                              'csv',
+                              'pdf'
+                          ],
+                   	bFilter: true,
+                    rowGroup: {
+                 	   endRender: function ( rows, group ) {
+                		   
+							var subtotal = $('<tr style="background-color:#337ab7!important"/>')
+								.append( '<td style="text-align:left;background-color:#337ab7!important;color:#FFF" >SubTotal:</td>' )
+                   				.append( '<td style="text-align:center;background-color:#337ab7!important;color:#FFF"></td>' );	
+							
+	                        for (var nLine = 3; nLine < 15; nLine++){
+	                        	
+	                     		var monthAmount = data.data.reduce( function (a, b) {
+	                     			var subtotal = 0;
+	                     			
+	                     				if(b[0] == group){
+	                     					
+	                     					if (typeof b[nLine] == 'string'){
+	                     						
+	                     						subtotal =  0;	
+	                     					} 
+	                     					else{
+	                     						subtotal =  b[nLine]
+	                     					}
+	                     					
+	                     					
+	                     					
+	                     				}
+
+	                                return a + subtotal;
+	                            }, 0);
+	                     		
+	                     		subtotal.append( '<td style="text-align:right;background-color:#337ab7!important;color:#FFF">' + monthAmount.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>');
+	                     		
+	                        }
+						
+	                       return subtotal.append( '<td style="text-align:right;background-color:#337ab7!important;color:#FFF"></td>');
+	                       
+                       },
+                 	   dataSrc:[0]
+                    },
+                    
+                    
+                    footerCallback: function ( row, data, start, end, display ) {
+                        var api = this.api();
+                        $( api.column( 1 ).footer() ).html('Total:');
+                        
+                        // Remove the formatting to get integer data for summation
+                        var intVal = function ( i ) {
+                            return typeof i === 'string' ?
+                                i.replace(/[\$,]/g, '')*1 :
+                                typeof i === 'number' ?
+                                    i : 0;
+                        };
+                        
+                        
+                        
+                        for (var nLine = 3; nLine < 15; nLine++){
+                        	
+                            var monthAmount = api
+                            	.column(nLine , {page:'all'})
+                            	.data()
+                            	.reduce( function (a, b) {
+                                	return intVal(a) + intVal(b);
+                           		}, 0 );
+                      
+                       		$( api.column( nLine ).footer() ).html(monthAmount.toLocaleString(undefined, {minimumFractionDigits: 2}));
+                        }
+                    }
+                 });
+                 
+                 window.loaded = true;
+         
+              }, 'json').fail(function(xhr, status, error) {
+             	    console.log("An AJAX error occured: " + status + "\nError: " + error);
+              });
+             
+         });
+      </script>
+   </head>
+   <body>
+      <div class="loader"></div>
+      <table id="table-projectrevenue" class="table table-striped" style="width:100%">
+         <tfoot>
+            <tr>
+               <th style="text-align:left" >Total:</th>
+               <th style="text-align:center"></th>
+               <th style="text-align:center"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+               <th style="text-align:right"></th>
+            </tr>
+         </tfoot>
+      </table>
+   </body>
+</html>

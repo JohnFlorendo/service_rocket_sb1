@@ -11,7 +11,8 @@
                      <table style="color: white; width: 100%; ">
                         <tr>
                            <td align="right" style="font-size : 24px; font-weight:500;" >
-                              Tax Invoice
+<!--                              Tax Invoice-->
+                              {{documentname}}
                            </td>
                         </tr>
                         <tr>
@@ -149,7 +150,13 @@
                            </tr>
                            <tr>
                               <td>Currency </td>
+
+                              {{#ifEquals subsidiary 'ServiceRocket (India) Private Ltd'}}
+                              <td align="left" >USD</td>
+                              {{else}}
                               <td align="left" >{{currencysymbol}}</td>
+                              {{/ifEquals}}
+
                            </tr> 
                            <tr>
                               <td>Exchange Rate </td>
@@ -176,8 +183,15 @@
                <th width="15%">Product</th>
                <th width="50%">Description</th>
                {{/if}}
-               <th align="right" width="10%">Qty</th>
+<!--               <th width="40%">Description</th>-->
+               <th align="right" width="5%">{{@root.custbody_unittype}}</th>
+<!--               <th align="right" width="5%">Qty</th>-->
                <th align="right" width="13%">Sales Price</th>
+               {{#ifEquals subsidiary 'ServiceRocket Inc.'}}
+               <th align="right" width="1%"></th>
+               {{else}}
+               <th align="right" width="10%">{{taxlabel}}</th>
+               {{/ifEquals}}
                {{#if @root.haslinediscount}}
                <th align="right" width="20%">Discount</th>
                {{else}}
@@ -186,30 +200,34 @@
             </tr>
          </thead>
          <tbody>
+         {{#ifEquals subsidiary 'ServiceRocket Inc.'}}
             {{#item}}
             {{#if displayonpdf}}
             <tr style="background-color: {{if_even @index}};" >
-	           <td align="center" valign="middle" width="5%">
+               <td align="center" valign="middle" width="5%">
                   <p style="text-align: center;">{{no}}</p>
                </td>
                {{#if @root.custbody_nvy_hide_prodname}}
                <td>
-                  <p style="text-align: left">{{description}}</p>
+                  <p style="text-align: left">{{{description}}}</p>
                </td>
                {{else}}
-               <td align="left">{{item}}</td>
+               <!--               <td align="left">{{item}}</td> Original-->
+               <td><p align="left">{{item}}</p></td>
                <td>
-                  <p style="text-align: left">{{description}}</p>
+                  <p style="text-align: left">{{{description}}}</p>
                </td>
                {{/if}}
+               <!--               <td><p style="text-align: left">{{{description}}}</p></td>-->
                <td align="right" valign="middle">{{quantity}}</td>
                <td align="right" valign="middle">{{rate}}</td>
+               <td align="right" valign="middle"></td>
                {{#if @root.haslinediscount}}
                <td align="right" valign="middle">
                   <table padding= "0px">
                      {{#discountdetail}}
                      <tr padding= "0px">
-                        <td padding= "1px" align="right">{{{desctription}}}</td>
+                        <td padding= "1px"><p align="right">{{{desctription}}}</p></td>
                      </tr>
                      <tr padding= "0px">
                         <td padding= "1px" align="right">{{#replace "-" ""}}{{amount}}{{/replace}}</td>
@@ -224,6 +242,55 @@
             {{else}}
             {{/if}}
             {{/item}}
+         {{else}}
+            {{#item}}
+            {{#if displayonpdf}}
+            <tr style="background-color: {{if_even @index}};" >
+	           <td align="center" valign="middle" width="5%">
+                  <p style="text-align: center;">{{no}}</p>
+               </td>
+               {{#if @root.custbody_nvy_hide_prodname}}
+               <td>
+                  <p style="text-align: left">{{{description}}}</p>
+               </td>
+               {{else}}
+<!--               <td align="left">{{item}}</td> Original-->
+               <td><p align="left">{{item}}</p></td>
+               <td>
+                  <p style="text-align: left">{{{description}}}</p>
+               </td>
+               {{/if}}
+<!--               <td><p style="text-align: left">{{{description}}}</p></td>-->
+               <td align="right" valign="middle">{{quantity}}</td>
+               <td align="right" valign="middle">{{rate}}</td>
+               <td align="right" valign="middle">
+                  {{#if tax1amt}}
+                  {{tax1amt}}
+                  {{else}}
+                  0.00
+                  {{/if}}
+               </td>
+               {{#if @root.haslinediscount}}
+               <td align="right" valign="middle">
+                  <table padding= "0px">
+                     {{#discountdetail}}
+                     <tr padding= "0px">
+                        <td padding= "1px"><p align="right">{{{desctription}}}</p></td>
+                     </tr>
+                     <tr padding= "0px">
+                        <td padding= "1px" align="right">{{#replace "-" ""}}{{amount}}{{/replace}}</td>
+                     </tr>
+                     {{/discountdetail}}
+                  </table>
+               </td>
+               {{else}}
+               {{/if}}
+               <td align="right" valign="middle">{{amount}}</td>
+            </tr>
+            {{else}}
+            {{/if}}
+            {{/item}}
+         {{/ifEquals}}
          </tbody>
       </table>
       <table style="width:100%; margin-left: 0.4in; margin-right: 0.4in;">
@@ -249,6 +316,10 @@
                      <td  align="right">{{currencysymbol}} {{taxtotal}}</td>
                   </tr>
                   {{else}}
+                  <tr>
+                     <td  >{{taxcode}} </td>
+                     <td  align="right">{{currencysymbol}} {{discounttotal}}</td>
+                  </tr>
                   {{/if}}
                </table>
                <hr/>
@@ -295,6 +366,6 @@
             </td>
          </tr>
       </table>
-      
+
    </body>
 </pdf>

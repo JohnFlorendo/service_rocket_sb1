@@ -24,10 +24,9 @@ function(file, query, render, runtime, handlebars, handlebarshelper, suitebox, m
        		objTemplate.dategenerated = moment().format('DD-MMM-YYYY hh:mm');
        		objTemplate.user = runtime.getCurrentUser().id;
        		objTemplate.employeeid = option.id;
-       		
-   		//var sTemplate = file.load({id: '../../template/promotionletter_v1_2.html'}).getContents();       		
+  		
    		var sTemplate = file.load({
-   							id: 223193
+   							id: 'SuiteScripts/CustomScripts/SuitePDF/template/termsandconditions_v1_0.html'
    						}).getContents();
 
        	var sHandlebar = handlebars.compile(sTemplate);

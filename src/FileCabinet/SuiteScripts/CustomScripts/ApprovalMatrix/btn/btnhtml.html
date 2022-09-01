@@ -1,0 +1,34 @@
+<script type="text/javascript">
+
+function submitforapproval(){
+	window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=submit", "_self");
+}
+
+function cancel(){
+    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=cancel", "_self");
+}
+
+function procurementReview(){
+    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=procurementreview", "_self");
+}
+
+function spendScheduleUpdated(){
+    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=spendschedupdated", "_self");
+}
+function dataChecked(){
+    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=datachecked", "_self");
+}
+
+function approve(){
+	window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=approve", "_self");
+}
+
+function reject(){
+
+	nlExtOpenWindow("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=reject", 'Reject', 400, 200, null, false, 'Reject', null);
+	jQuery( '.x-tool' ).click(function() { location.reload();});
+
+}
+
+
+</script>

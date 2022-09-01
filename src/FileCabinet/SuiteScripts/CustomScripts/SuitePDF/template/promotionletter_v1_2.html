@@ -47,7 +47,11 @@
                 table-layout: fixed;
                 width: 100%;
             }
-
+            table.signature {
+            padding-top: 20px;
+			  width: 100%;
+			  text-align: center;
+			}
             th {
                 font-weight: bold;
                 font-size: 18px;
@@ -98,7 +102,7 @@
             <tr>
                 <td colspan="2">&nbsp;</td>
             </tr>
-            {{#each section}}
+             {{#each section}}
             <tr>
                 <td colspan="2" style="height: 10px; text-align: justify;">
                     <strong>{{heading}}</strong>

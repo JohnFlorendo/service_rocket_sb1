@@ -1,6 +1,6 @@
-define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handlebars', '../../../Helper/nstojson', '../../../Library/momentjs/moment'],
+define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handlebars', '../../../Helper/nstojson', '../../../Library/momentjs/moment', '../../../SuitePDF/api/lib/library'],
 
-    function (record, search, file, helper, handlebars, nstojson, moment) {
+    function (record, search, file, helper, handlebars, nstojson, moment, libFunctions) {
 
         function generate(recPrint) {
 
@@ -18,7 +18,7 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                 })
             });
 
-            var sTemplate = file.load(170916);
+            var sTemplate = file.load(libFunctions.templateId().atlInvoice);
 
             var nTaxRate = recPrint.getSublistValue({
                 sublistId: 'item',
@@ -51,6 +51,8 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
 
             for (var nLine1 = 0; nLine1 < objRecSub.item.length; nLine1++) {
                 var inTaxRate = objRecSub.item[0].taxrate1;
+                // var inTax = objRecSub.item[0].taxcode;
+                var inTax = recPrint.getSublistValue({sublistId: 'item', fieldId: 'taxcode', line: 0});
 
                 if (objRecSub.item[nLine1].item_id == SUBTOTAL) {
 
@@ -59,6 +61,8 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                         objRecSub.item[idLastItem].amount_id = objRecSub.item[nLine1].amount_id;
                         objRecSub.item[idLastItem].amount = (objRecSub.item[idLastItem].amount_id).toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
                     }
+
+                    objRecSub.item[idLastItem].tax1amt = objRecSub.item[nLine1].tax1amt;
                 } else if (objRecSub.item[nLine1].item_id == PRICEADJUSTMENT) {
 
                     idLastDiscount = PRICEADJUSTMENT;
@@ -168,9 +172,15 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                     objRecSub.item[nLine1].displayonpdf = true;
                     objRecSub.item[nLine1].upgradecredit_id = 0;
                     objRecSub.item[nLine1].discountdetail = [];
+                    objRecSub.item[nLine1].description = recPrint.getSublistValue({sublistId: 'item', fieldId: 'description', line: nLine1}).replace(/(?:\r\n|\r|\n)/g, '<br />').replace('&', '&amp;');
                     idLastItem = nLine1;
                     idLastDiscount = -1;
+
+                    if (recPrint.getValue('subsidiary') == 14) {
+                        objRecSub.item[nLine1].tax1amt = Number(objRecSub.item[nLine1].amount.replace(/,/g, '') * (parseFloat(objRecSub.item[nLine1].taxrate1)/100)).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
                 }
+
             }
 
             if (nHeaderDiscount) {
@@ -230,30 +240,52 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
             }) == 14) {
                 objRecSub.exportnote = "SUPPLY MEANT FOR EXPORT UNDER BOND WITHOUT PAYMENT OF  IGST";
             }
-            var objSubsidiary = convertSubsidiaryValueToString();
-            var inSubsidiary = recPrint.getValue({
-                fieldId: 'subsidiary'
-            });
-            //documentname
-            if (inSubsidiary == objSubsidiary.ServiceRocket_Pty_Ltd) {
-                objRecSub.federalidnumber = 'ABN ' + objRecSub.federalidnumber;
-                objRecSub.taxcode = 'GST ' + (inTaxRate ? inTaxRate : '');
-                objRecSub.hastax = true;
-            } else if (inSubsidiary == objSubsidiary.ServiceRocket_Inc) {
-                objRecSub.federalidnumber = 'EIN ' + objRecSub.federalidnumber;
-                objRecSub.hastax = false;
-            } else if (inSubsidiary == objSubsidiary.ServiceRocket_Sdn_Bhd) {
-                objRecSub.federalidnumber = 'SST ' + objRecSub.federalidnumber;
-                objRecSub.taxcode = 'SST ' + (inTaxRate ? inTaxRate : '');
-                objRecSub.hastax = true;
-            } else if (inSubsidiary == objSubsidiary.ServiceRocket_Canada_Ltd) {
-                objRecSub.federalidnumber = objRecSub.federalidnumber;
-                objRecSub.taxcode = 'GST + PST ' + (inTaxRate ? inTaxRate : '');
-                objRecSub.hastax = true;
-            } else {
-                objRecSub.federalidnumber = '';
-                objRecSub.hastax = false;
-            }
+
+            libFunctions.subsidiaryLibrary(recPrint, objRecSub, inTaxRate, inTax);
+            // libFunctions.taxCode(inTax);
+            // var objSubsidiary = convertSubsidiaryValueToString();
+            // var inSubsidiary = recPrint.getValue({
+            //     fieldId: 'subsidiary'
+            // });
+            //
+            // //documentname
+            // objRecSub.documentname = 'Tax Invoice';
+            // if (inSubsidiary == objSubsidiary.ServiceRocket_Pty_Ltd) {
+            //     objRecSub.federalidnumber = 'ABN ' + objRecSub.federalidnumber;
+            //     objRecSub.taxcode = 'GST ' + (inTaxRate ? inTaxRate : '');
+            //     objRecSub.taxlabel = 'GST';
+            //     objRecSub.hastax = true;
+            // } else if (inSubsidiary == objSubsidiary.ServiceRocket_Inc) {
+            //     objRecSub.documentname = 'Invoice';
+            //     objRecSub.federalidnumber = 'EIN ' + objRecSub.federalidnumber;
+            //     objRecSub.taxcode = 'Discount';
+            //     objRecSub.hastax = false;
+            // } else if (inSubsidiary == objSubsidiary.ServiceRocket_Sdn_Bhd) {
+            //     objRecSub.federalidnumber = 'SST No: ' + objRecSub.federalidnumber;
+            //     objRecSub.taxcode = 'SST ' + (inTaxRate ? inTaxRate : '');
+            //     objRecSub.taxlabel = 'SST';
+            //     objRecSub.hastax = true;
+            // } else if (inSubsidiary == objSubsidiary.ServiceRocket_Canada_Ltd) {
+            //     objRecSub.federalidnumber = 'GST/HST Registration No: ' + objRecSub.federalidnumber;
+            //     objRecSub.taxcode = 'GST + PST ' + (inTaxRate ? inTaxRate : '');
+            //     objRecSub.taxlabel = 'GST';
+            //     objRecSub.hastax = true;
+            // } else if (inSubsidiary == objSubsidiary.ServiceRocket_Pte_Ltd) {
+            //     objRecSub.federalidnumber = '';
+            //     objRecSub.taxcode = 'GST ' + (inTaxRate ? inTaxRate : '');
+            //     objRecSub.hastax = true;
+            // } else if (inSubsidiary == objSubsidiary.ServiceRocket_SpA) {
+            //     objRecSub.federalidnumber = objRecSub.federalidnumber;
+            //     objRecSub.taxcode = 'GST ' + (inTaxRate ? inTaxRate : '');
+            //     objRecSub.hastax = true;
+            // } else if (inSubsidiary == objSubsidiary.ServiceRocket_Limited) {
+            //     objRecSub.federalidnumber = 'VAT Registration: ' + objRecSub.federalidnumber;
+            //     objRecSub.taxcode = 'VAT ' + (inTaxRate ? inTaxRate : '');
+            //     objRecSub.hastax = true;
+            // } else {
+            //     objRecSub.federalidnumber = '';
+            //     objRecSub.hastax = false;
+            // }
 
             if (recPrint.getValue('startdate') && recPrint.getValue('enddate')) {
                 objRecSub.startdate = moment(recPrint.getValue('startdate')).format('D-MMM-YY');
@@ -309,17 +341,6 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
             var sPdfTemplate = sHandlebar(objRecSub);
 
             return sPdfTemplate;
-        }
-
-        function convertSubsidiaryValueToString() {
-            var objSubsidiary = {
-                ServiceRocket_Pty_Ltd: 6,
-                ServiceRocket_Inc: 8,
-                ServiceRocket_Sdn_Bhd: 10,
-                ServiceRocket_Canada_Ltd: 14
-            };
-
-            return objSubsidiary;
         }
 
         return {

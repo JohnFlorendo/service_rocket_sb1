@@ -1,18 +1,24 @@
-define(['N/record', 'N/render','N/file','N/search','N/xml','N/currency'],
+define(['N/record', 'N/render','N/file','N/search','N/xml','N/currency', '/SuiteScripts/CustomScripts/SuitePDF/api/invoice'],
 
-    function(record, render,file,search,xml,currency) {
+    function(record, render,file,search,xml,currency, invoice) {
         var libFunction = {};
         const ServiceRocket_India_Private_Ltd = 15;
 
         libFunction.generatePDF = function (inTranId,folderId) {
             try{
+                var sPdfTemplate = '';
                 var xmlStr = '<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">';
                 xmlStr += '<pdfset>';
                 xmlStr += renderTrans(inTranId);
                 xmlStr += '</pdfset>';
 
+                recPrint = record.load({	type: record.Type.INVOICE,
+                    id: inTranId,
+                    isDynamic: true});
+                sPdfTemplate = invoice.generate(recPrint);
+
                 if(folderId){
-                    downloadPDF(inTranId,xmlStr,folderId);
+                    downloadPDF(inTranId,sPdfTemplate,folderId);
                 }
 
                 return xmlStr;
@@ -106,13 +112,13 @@ define(['N/record', 'N/render','N/file','N/search','N/xml','N/currency'],
             return arrInvoices;
         }
 
-        function downloadPDF(inTranId, xmlStr, folderId) {
+        function downloadPDF(inTranId, sPdfTemplate, folderId) {
             var isDownload = false;
             try{
                 var fileName = createFileName(inTranId);
                 log.debug('fileName', fileName);
 
-                var fileId = createInvoicePDF(fileName, xmlStr, folderId);
+                var fileId = createInvoicePDF(fileName, sPdfTemplate, folderId);
 
                 updateInvoiceField(fileId, inTranId);
             }catch (e) {
@@ -132,10 +138,10 @@ define(['N/record', 'N/render','N/file','N/search','N/xml','N/currency'],
             return fileName;
         }
 
-        function createInvoicePDF(fileName, xmlStr, folderId) {
+        function createInvoicePDF(fileName, sPdfTemplate, folderId) {
             try {
                 var renderer = render.create();
-                renderer.templateContent = xmlStr;
+                renderer.templateContent = sPdfTemplate;
 
                 var invoicePdf = renderer.renderAsPdf();
 

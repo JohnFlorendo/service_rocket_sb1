@@ -24,15 +24,17 @@ function(file, query, render, runtime, handlebars, handlebarshelper, suitebox, m
        											query: sqlSection, 
        											params: [2, 6]
        										}).asMappedResults();
+       		objTemplate.subsidiary = objData.subsidiary ;
+       		objTemplate.name = objData.name;
+       		objTemplate.budgetowner = objData.budgetowner;
        		objTemplate.date = moment().format('DD-MMM-YYYY');
        		objTemplate.dategenerated = moment().format('DD-MMM-YYYY hh:mm');
        		objTemplate.user = runtime.getCurrentUser().id;
        		objTemplate.employeeid = option.id;
-       		
-   		//var sTemplate = file.load({id: '../../template/promotionletter_v1_2.html'}).getContents();       		
-   		var sTemplate = file.load({
-   							id: 223193
-   						}).getContents();
+ 		
+   		var sTemplate = file.load({ 
+   			id: '../../template/offerletter_v1_2.html' 
+   		}).getContents();
 
        	var sHandlebar = handlebars.compile(sTemplate);
        		

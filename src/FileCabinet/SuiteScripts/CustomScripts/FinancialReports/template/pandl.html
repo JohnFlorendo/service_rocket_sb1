@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <!-- css Bootstrap 3 -->
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css"/>
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.3/af-2.3.7/b-2.0.1/date-1.1.1/fc-4.0.1/fh-3.2.0/r-2.2.9/rg-1.1.4/sc-2.0.5/sb-1.3.0/sp-1.4.0/datatables.min.css"/>
+      <!-- css dataTables.bootstrap.min.css -->
+      <link rel="stylesheet" type="text/css" href="/core/media/media.nl?id=238381&c=3688201&h=I9fWmOJP6c4gn4h0tig3Rne5Frafa_afVNW5i2GJ6mTlF0pq&_xt=.css">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+      <!-- css rowGroup.dataTables.min.css -->
+      <link rel="stylesheet" type="text/css" href="/core/media/media.nl?id=237236&c=3688201&h=qMSYc8XHCBpwg90rZ8RhsDp3bXdsiA4mOlbxXzS256H_bCzw&_xt=.css">
+      <!-- css FixedHeader  -->
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.2.1/css/fixedHeader.dataTables.min.css"/>
+      <!-- css Datepicker  -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.css" />
+      <!-- js jQuery -->
+      <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+      <!-- js Datatable  -->
+      <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.3/af-2.3.7/b-2.0.1/date-1.1.1/fc-4.0.1/fh-3.2.0/r-2.2.9/rg-1.1.4/sc-2.0.5/sb-1.3.0/sp-1.4.0/datatables.min.js"></script>
+      <!-- js FixedHeader  -->  
+      <script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.2.1/js/dataTables.fixedHeader.min.js"></script>
+      <!-- js Buttons  -->  
+      <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+      <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+      <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+      <!-- js Datatable Boostrap 3-->
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/js/bootstrap.bundle.min.js"></script>
+      <!-- js Dates -->
+      <!-- <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script> -->
+      <script src="//cdn.datatables.net/plug-ins/1.10.19/sorting/date-eu.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+      
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+	<script src="https://code.highcharts.com/modules/export-data.js"></script>
+	<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+      
+      
+      
+      <style type="text/css">
+         * {
+         font-size: 14px;
+         box-sizing: border-box;
+         }
+         ol,
+         ul {
+         padding-left: 0rem !important;
+         }
+         .text ul,
+         .text ol {
+         margin-left: 0px !important;
+         }
+         .nav {
+         display: flex !important;
+         }
+			.highcharts-figure,
+			.highcharts-data-table table {
+				width: 70%;
+				margin: 1em auto;
+			}
+
+			.highcharts-data-table table {
+				font-family: Verdana, sans-serif;
+				border-collapse: collapse;
+				border: 1px solid #EBEBEB;
+				margin: 10px auto;
+				width: 80%;
+			}
+
+			.highcharts-data-table caption {
+				padding: 1em 0;
+				font-size: 1.2em;
+				color: #555;
+			}
+
+			.highcharts-data-table th {
+				font-weight: 600;
+				padding: 0.5em;
+			}
+
+			.highcharts-data-table td,
+			.highcharts-data-table th,
+			.highcharts-data-table caption {
+				padding: 0.5em;
+			}
+
+			.highcharts-data-table thead tr,
+			.highcharts-data-table tr:nth-child(even) {
+				background: #f8f8f8;
+			}
+
+			.highcharts-data-table tr:hover {
+				background: #f1f7ff;
+			}
+
+			.highcharts-credits {
+				font-size: 0px !important;
+			}
+         table.dataTable thead th{
+  			text-align: center!important;
+		}
+         .tab-content {
+         padding-left: 20px !important;
+         }
+         .table-caption {
+         caption-side: top;
+         width: auto;
+         text-align: center
+         }
+         .pagination {
+         display: flex !important;
+         list-style: none !important;
+         }
+         p.truncate {
+         width: 200px;
+         white-space: nowrap;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         resize: horizontal;
+         }
+         .noaccess {
+         display: block;
+         margin-left: auto;
+         margin-right: auto;
+         }
+         .loader {
+         position: absolute;
+         left: 50%;
+         top: 50%;
+         z-index: 1;
+         width: 120px;
+         height: 120px;
+         margin: -76px 0 0 -76px;
+         border: 16px solid #f3f3f3;
+         border-radius: 50%;
+         border-top: 16px solid #3498db;
+         -webkit-animation: spin 2s linear infinite;
+         animation: spin 2s linear infinite;
+         }
+         /* Safari */
+         @-webkit-keyframes spin {
+         0% { -webkit-transform: rotate(0deg); }
+         100% { -webkit-transform: rotate(360deg); }
+         }
+         @keyframes spin {
+         0% { transform: rotate(0deg); }
+         100% { transform: rotate(360deg); }
+         }
+         .dt-buttons {
+         margin-top: 20px;
+         }
+         .btn-secondary{
+         background-color:#eee;
+         color: #555;
+         padding-left:15px;
+         padding-right:15px;
+         border: 1px solid #E5E5E5;
+         }
+      </style>
+      <script type="text/javascript">
+      
+         $(document).ready(function() {
+         	
+             $.get('/app/site/hosting/scriptlet.nl?script=1507&deploy=1&action=backend&report={{report}}&type={{type}}', function (data) {
+             	
+             	$(".loader").hide();
+             	
+             	var arrDefs = [];
+             		
+                	if(data.hide.length > 0){
+                		arrDefs.push({
+                         visible: false,
+                         targets: data.hide
+                    	});
+                	}
+                	
+                	if(data.truncate.length > 0){
+                		arrDefs.push({
+                    		render: function ( data, type, row ) {
+                             return '<p class="truncate">' + data + '</p>';
+                         },
+                         targets: data.truncate	
+                    	});
+                	}
+
+                	if(data.numeric.length > 0){
+                		arrDefs.push({
+                			className: 'dt-body-center',
+                            render: DataTable.render.number(',', '.', 2, ''),
+                            targets: data.numeric
+                        });
+                	}
+    	
+                	
+                	if(data.link.length > 0){
+                		arrDefs.push({
+                    		render: function ( data, type, row ) {
+                    			var arrData = data.split('+')
+                    			
+                             return '<a target="_blank" href="'+ arrData[1] + '">' + arrData[0] + '</a>';
+                         },
+                         targets: data.link	
+                    	});
+                	}	
+                	
+                	if(data.currency.length > 0){
+        				arrDefs.push({
+        					className: 'dt-body-right',
+        					render: DataTable.render.number(',', '.', 2, ''),
+        					targets: data.currency
+        				});
+                	}	
+        
+                 var dtSuiteTable = $('#table-projectrevenue').DataTable({
+                	searching: false,
+                	ordering: false,
+                	paging: false,
+                	info: false,
+                 	responsive: false,	
+                    data: data.data,
+                    columns: data.header,
+                 	columnDefs: arrDefs,
+                    buttons: [
+                              'pageLength',
+                              'copy',
+                              'excel',
+                              'csv',
+                              'pdf'
+                          ]
+                 });
+                 
+                 var arrCategories = data.header.reduce((acc, value) => {
+                	  acc.push(value.title);
+                	  return acc;
+                	},[]);
+                 arrCategories.shift();
+                 arrCategories.shift();
+                 
+                var arrRevenue = data.data[2];
+               		arrRevenue.shift();
+               		arrRevenue.shift();
+               	var arrCos = data.data[3];
+               		arrCos.shift();
+               		arrCos.shift();
+				var arrExpenses = data.data[4];
+	              	arrExpenses.shift();
+	              	arrExpenses.shift();
+           		var arrNetIncome = data.data[8];
+           			arrNetIncome.shift();
+           			arrNetIncome.shift();
+           		var arrBooking = data.data[0];
+           			arrBooking.shift();
+           			arrBooking.shift();
+				var arrBilling = data.data[1];
+					arrBilling.shift();
+					arrBilling.shift();
+
+                 //revenue,, Expenses, Income
+                 
+                 Highcharts.chart('reni', {
+     				chart: {
+     					zoomType: 'xy',
+     					height: '50%'
+     				},
+     				title: {
+     					text: '{{lob}} Revenue, CoS, Expenses, and Income'
+     				},
+     				subtitle: {
+     					text: 'Source: NetSuite'
+     				},
+     				xAxis: [{
+     					labels: {
+     						style:{
+     							fontSize: '13px'	
+     						}
+  						},
+     					categories: arrCategories,
+     					crosshair: true
+     				}],
+     				yAxis: [{ // Primary yAxis
+     					labels: {
+     						format: '{value:,.0f}',
+    						style: {
+     							color: Highcharts.getOptions().colors[1],
+     							fontSize: '13px'	
+     						}
+     					},
+     					title: {
+     						text: 'USD',
+     						style: {
+     							color: Highcharts.getOptions().colors[1],
+     							fontSize: '13px'	
+     						}
+     					}
+     				}],
+     				tooltip: {
+     					shared: true
+     				},
+     				series: [{
+     					name: 'Revenue',
+     					type: 'column',
+     					yAxis: 0,
+     					data: arrRevenue,
+     					tooltip: {
+     						valuePrefix: 'USD '
+     					}
+     				}, {
+     					name: 'CoS',
+     					type: 'column',
+     					color: 'orange',
+     					yAxis: 0,
+     					data: arrCos,
+     					tooltip: {
+     						valuePrefix: 'USD '
+     					}
+     				}, {
+     					name: 'Expenses',
+     					type: 'column',
+     					color: 'red',
+     					yAxis: 0,
+     					data: arrExpenses,
+     					tooltip: {
+     						valuePrefix: 'USD '
+     					}
+     				}, {
+     					name: 'Net Income',
+     					type: 'column',
+     					yAxis: 0,
+     					color: 'green',
+     					data: arrNetIncome,
+     					tooltip: {
+     						valuePrefix: 'USD '
+     					}
+     				}]
+     			});
+                 
+                 
+                 //booking, billing
+                 
+                 Highcharts.chart('bb', {
+      				chart: {
+      					zoomType: 'xy',
+      					height: '50%'
+      				},
+      				title: {
+      					text: '{{lob}} Booking and Billing'
+      				},
+      				subtitle: {
+      					text: 'Source: NetSuite'
+      				},
+      				xAxis: [{
+      					labels: {
+     						style: {
+     							fontSize: '13px'	
+     						}
+      					},
+      					categories: arrCategories,
+      					crosshair: true
+      				}],
+      				yAxis: [{ // Primary yAxis
+      					labels: {
+      						format: '{value:,.0f}',
+      						fontSize: '13px',
+      						style: {
+      							color: Highcharts.getOptions().colors[1],
+      							fontSize: '13px'	
+      						}
+      					},
+      					title: {
+      						text: 'USD',
+      						style: {
+      							color: Highcharts.getOptions().colors[1]
+      						}
+      					}
+      				}],
+      				tooltip: {
+      					shared: true
+      				},
+      				series: [{
+      					name: 'Booking',
+      					type: 'column',
+      					yAxis: 0,
+      					data: arrBooking,
+      					tooltip: {
+      						valuePrefix: 'USD '
+      					}
+      				}, {
+      					name: 'Billing',
+      					type: 'column',
+      					color: 'green',
+      					yAxis: 0,
+      					data: arrBilling,
+      					tooltip: {
+      						valuePrefix: 'USD '
+      					}
+      				}]
+      			});
+                 
+         
+              }, 'json').fail(function(xhr, status, error) {
+             	    console.log("An AJAX error occured: " + status + "\nError: " + error);
+              });
+             
+         });
+      </script>
+   </head>
+   <body>
+      <div class="loader"></div>
+
+		<figure class="highcharts-figure">
+			<div id="reni"></div>
+		</figure>
+		
+		<br/>
+		
+		
+		<figure class="highcharts-figure">
+			<div id="bb"></div>
+		</figure>
+
+	<div>
+	
+	<table id="table-projectrevenue" class="table table-striped" style="width:100%">
+      </table>
+	
+	</div>      
+      
+
+   </body>
+</html>

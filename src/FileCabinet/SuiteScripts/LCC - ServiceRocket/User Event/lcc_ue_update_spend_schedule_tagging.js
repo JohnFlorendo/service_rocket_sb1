@@ -16,45 +16,47 @@ define(['N/format', 'N/task', 'N/search', 'N/record', 'N/url', 'N/ui/message', '
                     inTransId = newRecord.getValue('custrecord_sr_sp_sch_po_trans');
                 }
 
-                var arrResult = libFieldMapping.searchLineDescriptionRequisition(inTransId);
-                var objField = context.form.addField({
-                    id: libFieldMapping.fieldIds.Custpage_Line_Description,
-                    type: serverWidget.FieldType.SELECT,
-                    label: 'Line Description',
-                    // container: 'main'
-                });
-                objField.isMandatory = true;
-                context.form.insertField({
-                    field : objField,
-                    nextfield : 'custrecord_sr_sp_sch_amount'
-                });
+                if (inTransId) {
+                    var arrResult = libFieldMapping.searchLineDescriptionRequisition(inTransId);
+                    var objField = context.form.addField({
+                        id: libFieldMapping.fieldIds.Custpage_Line_Description,
+                        type: serverWidget.FieldType.SELECT,
+                        label: 'Line Description',
+                        // container: 'main'
+                    });
+                    objField.isMandatory = true;
+                    context.form.insertField({
+                        field : objField,
+                        nextfield : 'custrecord_sr_sp_sch_amount'
+                    });
 
-                objField.addSelectOption({
-                    value: '',
-                    text: ''
-                });
+                    objField.addSelectOption({
+                        value: '',
+                        text: ''
+                    });
 
-                for (var indx = 0; indx < arrResult.length; indx++) {
-                    var objPerTransactionRecord = arrResult[indx];
-                    for (var stField in objPerTransactionRecord) {
-                        var valueField = objPerTransactionRecord[stField];
-                        if (valueField) {
-                            objField.addSelectOption({
-                                value: valueField.trim().replace(/\r?\n|\r/g, " "),
-                                text: valueField
-                            });
+                    for (var indx = 0; indx < arrResult.length; indx++) {
+                        var objPerTransactionRecord = arrResult[indx];
+                        for (var stField in objPerTransactionRecord) {
+                            var valueField = objPerTransactionRecord[stField];
+                            if (valueField) {
+                                objField.addSelectOption({
+                                    value: valueField.trim().replace(/\r?\n|\r/g, " "),
+                                    text: valueField
+                                });
+                            }
                         }
                     }
-                }
 
-                var stLineDescription = newRecord.getValue({
-                    fieldId: libFieldMapping.fieldIds.Custrecord_Line_Description
-                });
-                log.debug('load stLineDescription', stLineDescription);
-                newRecord.setValue({
-                    fieldId: libFieldMapping.fieldIds.Custpage_Line_Description,
-                    value: stLineDescription
-                });
+                    var stLineDescription = newRecord.getValue({
+                        fieldId: libFieldMapping.fieldIds.Custrecord_Line_Description
+                    });
+                    log.debug('load stLineDescription', stLineDescription);
+                    newRecord.setValue({
+                        fieldId: libFieldMapping.fieldIds.Custpage_Line_Description,
+                        value: stLineDescription
+                    });
+                }
             }
         }
 

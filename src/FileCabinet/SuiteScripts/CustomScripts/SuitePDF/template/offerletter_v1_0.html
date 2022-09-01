@@ -31,7 +31,12 @@
                 table-layout: fixed;
                 width: 100%;
             }
-
+            
+            table.signature {
+			  width: 100%;
+			  text-align: center;
+			}
+			
             th {
                 font-weight: bold;
                 font-size: 18px;
@@ -91,7 +96,7 @@
             	{{#each (paragraph body)}}
             <tr>
                 <td colspan="2" style="height: 10px; text-align: justify;">
-                   {{this}}
+                   {{{this}}}
                 </td>
             </tr>
             	{{/each}}
@@ -102,6 +107,8 @@
             <tr>
                 <td colspan="2" style="height: 10px;">&nbsp;</td>
             </tr>
+
+			
 			{{#each (paragraph footer)}}
             <tr>
                 <td colspan="2" style="height: 10px; text-align: justify;">{{this}}</td>
@@ -111,6 +118,30 @@
                 <td align="right"></td>
             </tr>
              {{/each}}
+            <tr>
+                <td colspan="2" style="height: 10px;">Sincerly,
+			
+			<table class="signature">
+			   <tbody>
+			      <tr>
+			         <td>For {{subsidiary}}</td>
+			         <td>Accepted and agreed by,</td>
+			      </tr>
+			      <tr>
+			         <td></td>
+			         <td></td>
+			      </tr>
+			      <tr>
+			         <td>{{budgetowner}}</td>
+			         <td>{{name}}</td>
+			      </tr>
+				  <tr>
+			         <td></td>
+			         <td>Workforce Planning</td>
+			      </tr>
+			   </tbody>
+			</table></td>
+            </tr>
         </table>
             
 

@@ -40,7 +40,9 @@ define(['N/record', 'N/runtime', 'N/url', 'N/ui/serverWidget', 'N/file'],
                     label: 'JQ'
                 });
 
-                if ([617, 5682, 7036, 8754, 8972, 171596, 14189].indexOf(runtime.getCurrentUser().id) > -1) {
+                var arrEmployees = employeeRecords();
+                // log.debug('arrEmployees', arrEmployees);
+                if (arrEmployees.indexOf(runtime.getCurrentUser().id) > -1) {
 
                     var sURL = url.resolveScript({
                         scriptId: 'customscript_suitepdf_sl',
@@ -53,7 +55,8 @@ define(['N/record', 'N/runtime', 'N/url', 'N/ui/serverWidget', 'N/file'],
 
                     form.addButton({
                         id: 'custpage_btn_print',
-                        label: 'Generate Invoice(test)',
+                        // label: 'Generate Invoice(test)',
+                        label: 'Project Invoice',
                         functionName: 'generateAtlInvoice'
                     });
                 }
@@ -67,6 +70,26 @@ define(['N/record', 'N/runtime', 'N/url', 'N/ui/serverWidget', 'N/file'],
         }
 
     }
+
+        function employeeRecords() {
+            var arrEmployees = [
+                617, //Cyrus Yong
+                5682, //Adam May
+                7036, //Samantha Snazel
+                8754, //Jennifer Szuszan
+                8972, //JC Duarte
+                171596, //Patrick W Alcomendas
+                14189, //Lea C C
+                372597, //Ceana Admin
+                8338, //Yi Jing Lai
+                9217, //Kushum Lata
+                8466, //Delia Rivas
+                1060238, //John Nathaniel Florendo
+                1060647, //Hacel Adriano
+            ];
+
+            return arrEmployees;
+        }
 
     /**
      * Function definition to be triggered before record is loaded.

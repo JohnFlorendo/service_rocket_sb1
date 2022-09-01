@@ -56,6 +56,8 @@ define(['N/runtime', 'N/record', '../api/purchaserequisition'],
 
                         var objFolder = purchaserequesition.createFolder(newRec);
                         log.audit({title: 'afterSubmit', details: 'folder:' + JSON.stringify(objFolder)});
+
+                        purchaserequesition.setGSTAmountField(newRec);
                     }
                 }
 

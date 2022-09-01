@@ -5,54 +5,74 @@ define(['N/https'],
 function(https) {
 	
 	create = function(option){
-		
+
 		var retMe = {
+			status: '',
 			request : option
 		};
 		
-		var resp = https.post({
-			url: 'https://api.box.com/2.0/sign_requests', 
-			body: JSON.stringify(objPayload.data), 
-			headers: {	
-				'Content-Type': 'application/json', 
-				'Authorization': 'Bearer {custsecret_box_apikey}'
-			},
-			credentials: ['custsecret_box_apikey']
-		});
-		
-		if (resp.code == 200 || resp.code == 201) {
-
-			var objBody = JSON.parse(resp.body);
+		try{
 			
-			retMe.status = 'SUCCESS';
-			retMe.response = {
-				data: objBody
-			};
+			var resp = https.post({
+				url: 'https://api.box.com/2.0/sign_requests', 
+				body: JSON.stringify(option), 
+				headers: {	
+					'Content-Type': 'application/json', 
+					'Authorization': 'Bearer {custsecret_box_apikey}'
+				},
+				credentials: ['custsecret_box_apikey']
+			});
+			
+			if (resp.code == 200 || resp.code == 201) {
+				
+				var dDate = new Date();
+				var objBody = JSON.parse(resp.body);
+				
+				retMe.status = 'SUCCESS';
+				retMe.response = {
+					message: 'BoxSign request sent. ' + (new Date()).toString()
+				};
+				
+				return retMe;
+			}
+			else {
+
+				var objBody = {};
+
+				try {
+					objBody = JSON.parse(resp.body);
+				}
+				catch (err) {
+
+					var e = err;
+					objBody.message = resp.body;
+				}
+
+				retMe.status = 'SUCCESS';
+				retMe.response = {
+					message: resp.code + ': ' + objBody.message
+				};
+				
+				return retMe;
+			}
 		}
-		else {
-
-			var objBody = {};
-
-			try {
-				objBody = JSON.parse(resp.body);
-			}
-			catch (err) {
-
-				var e = err;
-				objBody.message = resp.body;
-			}
-
+		catch(err){
+			
 			retMe.status = 'FAILED';
 			retMe.response = {
-				message: resp.code + ': ' + objBody.message
+				message: 'ERROR: ' + err
 			};
+			
+			return retMe;
 		}
-		
-		
-		return retMe;
 	};
 	
 	resend = function(option){
+		
+		var retMe = {
+			status: '',
+			request : option
+		};
 		
 		var resp = https.post({
 			url: 'https://api.box.com/2.0/sign_requests/'+ option.signrequestid + '/resend', 
@@ -68,8 +88,8 @@ function(https) {
 			var dDate = new Date();
 			var objBody = JSON.parse(resp.body);
 
-			retMe.result = {
-				status: 'SUCCESS',
+			retMe.status = 'SUCCESS';
+			retMe.response = {
 				message: 'BoxSign request sent. ' + (new Date()).toString()
 			};
 		}
@@ -86,8 +106,9 @@ function(https) {
 				objBody.message = resp.body;
 			}
 
-			retMe.result = {
-				status: 'FAILED',
+			retMe.status = 'FAILED';
+			
+			retMe.response = {
 				message: resp.code + ': ' + objBody.message
 			};
 		}

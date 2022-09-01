@@ -1,25 +1,55 @@
-define(['N/https', 'N/record', 'N/search', 'N/email'],
+define(['N/https', 'N/record', 'N/search', 'N/email', 'N/query', './lib/file', './lib/folder', './lib/sign'],
 /**
  * @param {https} https
  * @param {record} record
  * @param {search} search
  */
-function(https, record, search, email) {
+function(https, record, search, email, query, boxfile, folder, sign) {
+	
+	getFile = function(){
+		return boxfile.get(option);
+	};
+	
+	updateFolder = function(option){
+		
+		return folder.update(option);
+	};
+	
+	emailUpload = function(option) {
+		return boxfile.upload(option);
+	};
+	
+	gcfUpoad = function(option) {
+		return boxfile.gcfUpoad(option);
+	};
+	
+	downloadFile = function(option) {
+		return boxfile.download(option);
+	};
+	
+	requestSign = function(option){
+		return sign.create(option);
+	};
+	
+	searchFile = function(option){
+		return boxfile.search(option);
+	};
 	
 	createFolder = function(objFolder, objRecord) {
-		
+	// createFolder = function(option) {
+		// return folder.createHW(option);
 		try{
-			
+
 			var objSuiteBox = getSuiteBoxConfig(objRecord.record);
-			
+
 			if(objSuiteBox.status == 'bad'){
 				objSuiteBox.status = 'failed';
 				return objSuiteBox;
 			}
 			else if(objSuiteBox.status == 'ok') {
-				
+
 				var sParent = '';
-				
+
 				if(objFolder.parent != null && objFolder.parent != ''){
 					sParent = objFolder.parent;
 				}
@@ -29,19 +59,19 @@ function(https, record, search, email) {
 
 				var objPayload ={	name: objSuiteBox.prefix + objFolder.name,
 									parent: {id : objSuiteBox.parent}};
-				var objHeader =	{	'Content-Type': 'application/json', 
-									Authorization: 'Bearer ' + objSuiteBox.accesstoken}; 
-				
+				var objHeader =	{	'Content-Type': 'application/json',
+									Authorization: 'Bearer ' + objSuiteBox.accesstoken};
+
 				log.audit({title: 'createFolder', details: 'request: ' + JSON.stringify(objPayload)});
-				
+
 				var objResp = https.post({url: 'https://api.box.com/2.0/folders', body: JSON.stringify(objPayload), headers: objHeader});
-				
+
 				log.audit({title: 'createFolder', details: 'response: ' + objResp.code + ' ' + objResp.body});
-				
+
 				if (objResp.code == 201) {
-					
+
 					var objFolder = JSON.parse(objResp.body);
-					
+
 					var recFolder = record.create({type: 'customrecord_box_record_folder'});
 						recFolder.setValue({fieldId: 'custrecord_ns_record_id', value: objRecord.id.toString()});
 						recFolder.setValue({fieldId: 'custrecord_box_record_folder_id', value: objFolder.id});
@@ -54,13 +84,17 @@ function(https, record, search, email) {
 					return {status: 'failed',
 							message: objResp.code  + ':' + objResp.body};
 				}
-			}			
+			}
 		}
 		catch (err){
 			log.audit({title: 'createFolder', details: 'err:' + err});
 			return {status: 'failed',
 					message: 'ERROR: ' + err};
 		}
+	};
+	
+	folderContents = function(option){
+		return folder.contents(option);
 	};
 	
 	addCollab = function(objCollab, recType) {
@@ -162,34 +196,7 @@ function(https, record, search, email) {
 		}
 	};
 	
-	//***updated,deployed 24 Feb 2021 ITSM-1582
-
-	emailUpload = function(objEmail, recType) {
-		
-		var objSuiteBox = getSuiteBoxConfig(recType);
-		
-		if(objEmail.email == '' || !objEmail.email){
-			objEmail.email = objSuiteBox.email;
-		}
-		
-		if(objEmail.author == '' || !objEmail.author){
-			objEmail.author = objSuiteBox.author;
-		}
-		
-		email.send({
-		    author: objEmail.author,
-		    recipients: objEmail.email,
-		    subject: objEmail.subject,
-		    body: objEmail.body,
-		    //***updated 25 Feb 2021
-		    attachments: objEmail.attachments,
-		    relatedRecords: objEmail.relatedrecord
-		    //***
-		});
-	};
-	//***
 	
-	//***updated,deployed 10 Mar 2021 ITSM-1666
 
 
 	getFolderRecord = function(objSuitebox){
@@ -237,12 +244,71 @@ function(https, record, search, email) {
 	};
 	//***
 	
+	getConfig = function(recType){
+		
+		try{
+			
+			var arrHsDeal = query.runSuiteQL('SELECT id FROM customrecord_box_record_type_config WHERE custbody_hubspot_id = '+ option.id).asMappedResults();
+
+			var src = search.create({	type: 'customrecord_box_record_type_config',
+				columns: [{	name: 'custrecord_prefix'},
+				          {	name: 'custrecord_suitebox_parent_folder'},
+				          {	name: 'custrecord_suitebox_access_token',
+				          	join: 'custrecord_suitebox_config'},
+				          	
+				          //***updated,deployed 24 Feb 2021 ITSM-1582
+				          {	name: 'custrecord_suitebox_author',
+					          	join: 'custrecord_suitebox_config'},
+				          {	name: 'custrecord_suitebox_email',
+					          	join: 'custrecord_suitebox_config'}]});
+						  //***
+			
+				src.filters = [];
+				src.filters.push(search.createFilter({	name : 'custrecord_record_type', 
+														operator : 'is', 
+														values : recType}));
+				
+				var res = src.run().getRange({	start: 0,
+												end: 1});
+				
+				if(res.length < 1){
+					return {status : 'bad',
+							message : 'CONFIG: Missing SuiteBox Config'};
+				}
+				else{
+					
+					return {status: 'ok',
+							prefix : res[0].getValue({name: 'custrecord_prefix'}),
+							parent : res[0].getValue({name: 'custrecord_suitebox_parent_folder'}),
+							accesstoken : res[0].getValue({name: 'custrecord_suitebox_access_token',
+														join: 'custrecord_suitebox_config'}),
+							//***updated,deployed 24 Feb 2021 ITSM-1582
+							author : res[0].getValue({name: 'custrecord_suitebox_author',
+								join: 'custrecord_suitebox_config'}),
+							email : res[0].getValue({name: 'custrecord_suitebox_email',
+								join: 'custrecord_suitebox_config'})};
+							//***
+				}
+		}
+		catch(err){
+			log.audit({title: 'getSuiteBoxConfig', details: 'err:' + err});
+			return {status: 'bad',
+					message: 'ERROR: ' + err};
+		}
+	};
+	
+	
     return {
     	createFolder: createFolder,
+    	updateFolder: updateFolder,
+    	folderContents: folderContents,
+    	getFile : getFile,
+    	requestSign: requestSign,
     	addCollab: addCollab,
     	emailUpload: emailUpload,
     	getFolderRecord: getFolderRecord,
-    	createFolderRecord: createFolderRecord
+    	createFolderRecord: createFolderRecord,
+    	getConfig: getConfig
     };
     
 });
