@@ -1,34 +1,45 @@
 <script type="text/javascript">
 
-function submitforapproval(){
-	window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=submit", "_self");
-}
+    function submitforapproval() {
+        window.open("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=submit", "_self");
+    }
 
-function cancel(){
-    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=cancel", "_self");
-}
+    function cancel() {
+        var confirmation = confirm('Are you sure you want to Cancel this Requisition?')
+        if (confirmation) {
+            window.open("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=cancel", "_self");
+        }
+    }
 
-function procurementReview(){
-    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=procurementreview", "_self");
-}
+    function procurementReview() {
+        window.open("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=procurementreview", "_self");
+    }
 
-function spendScheduleUpdated(){
-    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=spendschedupdated", "_self");
-}
-function dataChecked(){
-    window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=datachecked", "_self");
-}
+    function spendScheduleUpdated() {
+        window.open("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=spendschedupdated", "_self");
+    }
 
-function approve(){
-	window.open("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=approve", "_self");
-}
+    function dataChecked(objData) {
 
-function reject(){
+        if (objData.expirydate && objData.paymentmethod) {
+            window.open("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=datachecked", "_self");
+        } else {
+            alert('Expiry Date and Payment Method cannot be empty')
+        }
+    }
 
-	nlExtOpenWindow("/app/site/hosting/scriptlet.nl?script=1518&deploy=1&record={{record}}&recordid={{id}}&action=reject", 'Reject', 400, 200, null, false, 'Reject', null);
-	jQuery( '.x-tool' ).click(function() { location.reload();});
+    function approve() {
+        window.open("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=approve", "_self");
+    }
 
-}
+    function reject() {
+
+        nlExtOpenWindow("/app/site/hosting/scriptlet.nl?script=customscript_approvalmatrix_sl&deploy=customdeploy_approvalmatrix_sl&record={{record}}&recordid={{id}}&action=reject", 'Reject', 600, 400, null, false, 'Reject', null);
+        jQuery('.x-tool').click(function () {
+            location.reload();
+        });
+
+    }
 
 
 </script>

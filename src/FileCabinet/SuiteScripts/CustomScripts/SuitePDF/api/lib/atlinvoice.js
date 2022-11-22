@@ -28,6 +28,9 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
 
             var objRecPrint = nstojson.get(recPrint);
             var objRecSub = nstojson.get(recSub);
+            objRecSub.overallsubtotal = recPrint.getValue("subtotal").toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+            objRecSub.overalldiscounttotal = recPrint.getValue("discounttotal").toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+
             var objPercentDicount = {};
 
             for (var attrname in objRecPrint) {
@@ -56,13 +59,19 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
 
                 if (objRecSub.item[nLine1].item_id == SUBTOTAL) {
 
+                    log.audit('idLastDiscount', idLastDiscount);
+                    log.audit('idLastItem', idLastItem + ' ----- ' + objRecSub.item[idLastItem].tax1amt);
+                    log.audit('nLine1', nLine1 + ' ----- ' + objRecSub.item[nLine1].tax1amt);
+
                     if (idLastDiscount != UPGRADECREDIT && idLastDiscount != -1) {
                         objRecSub.item[nLine1].displayonpdf = false;
                         objRecSub.item[idLastItem].amount_id = objRecSub.item[nLine1].amount_id;
                         objRecSub.item[idLastItem].amount = (objRecSub.item[idLastItem].amount_id).toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
                     }
 
-                    objRecSub.item[idLastItem].tax1amt = objRecSub.item[nLine1].tax1amt;
+                    if (idLastDiscount != -1) {
+                        objRecSub.item[idLastItem].tax1amt = objRecSub.item[nLine1].tax1amt;
+                    }
                 } else if (objRecSub.item[nLine1].item_id == PRICEADJUSTMENT) {
 
                     idLastDiscount = PRICEADJUSTMENT;
@@ -143,7 +152,8 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                     };
 
                     objRecSub.item[idLastItem].amount_id += objRecSub.item[nLine1].amount_id;
-                    objRecSub.item[idLastItem].amount = (objRecSub.item[idLastItem].amount_id).toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+                    // objRecSub.item[idLastItem].amount = (objRecSub.item[idLastItem].amount_id).toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+                    objRecSub.item[idLastItem].grossamt = (objRecSub.item[idLastItem].amount_id).toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 
                     objRecSub.item[idLastItem].discountdetail.push(objDiscount);
                     objRecSub.srdiscount += objRecSub.item[nLine1].amount_id;
@@ -172,7 +182,8 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                     objRecSub.item[nLine1].displayonpdf = true;
                     objRecSub.item[nLine1].upgradecredit_id = 0;
                     objRecSub.item[nLine1].discountdetail = [];
-                    objRecSub.item[nLine1].description = recPrint.getSublistValue({sublistId: 'item', fieldId: 'description', line: nLine1}).replace(/(?:\r\n|\r|\n)/g, '<br />').replace('&', '&amp;');
+                    // objRecSub.item[nLine1].description = recPrint.getSublistValue({sublistId: 'item', fieldId: 'description', line: nLine1}).replace(/(?:\r\n|\r|\n)/g, '<br />').replace('&', '&amp;');
+                    objRecSub.item[nLine1].arrLineDescription = objRecSub.item[nLine1].description.replace(/&/g, '&amp;').split('\n');
                     idLastItem = nLine1;
                     idLastDiscount = -1;
 
@@ -184,11 +195,8 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
             }
 
             if (nHeaderDiscount) {
-
                 if (nHeaderDiscount.indexOf('%') > -1) {
-
                     var nDicountRate = nHeaderDiscount.replace(/-|%/g, '') / 100;
-
                     for (var nLine1 = 0; nLine1 < objRecSub.item.length; nLine1++) {
 
                         if (objRecSub.item[nLine1].displayonpdf) {
@@ -230,6 +238,7 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                     objRecSub.hassrdiscount = true;
                     objRecSub.srdiscount += parseFloat(nHeaderDiscount.replace(/[^\d\.\-]/g, ''));
                 }
+
             }
 
             objRecSub.taxtotal_id += objRecSub.tax2total_id || 0.00;
@@ -242,6 +251,7 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
             }
 
             libFunctions.subsidiaryLibrary(recPrint, objRecSub, inTaxRate, inTax);
+
             // libFunctions.taxCode(inTax);
             // var objSubsidiary = convertSubsidiaryValueToString();
             // var inSubsidiary = recPrint.getValue({
@@ -335,6 +345,12 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
             objRecSub.paymentinstruction = helper.getPaymentInstruction({
                 record: recPrint
             });
+
+            if(objRecSub.srdiscount == 0 || objRecSub.srdiscount == "0.00") {
+                objRecSub.hassrdiscount = false;
+            }
+
+            objRecSub.paymentinstruction = objRecSub.paymentinstruction.replace(/&nbsp;/g, ' ');
 
             var sHandlebar = handlebars.compile(sTemplate.getContents());
             handlebars = helper.registerHelpers(handlebars);

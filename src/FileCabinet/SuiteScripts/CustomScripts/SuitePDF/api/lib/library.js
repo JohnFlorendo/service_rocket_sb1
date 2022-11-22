@@ -36,7 +36,8 @@ define(['N/query', 'N/currency'],
                 objRecSub.taxcode = 'Discount';
                 objRecSub.hastax = false;
             } else if (objRecordFields.inSubsidiary == objSubsidiary.ServiceRocket_Sdn_Bhd) {
-                objRecSub.federalidnumber = 'SST No: ' + objRecSub.federalidnumber;
+                objRecSub.documentname = 'Invoice';
+                objRecSub.federalidnumber = 'BRN: ' + objRecSub.custrecord_company_brn + '<br />' + 'SST No: ' + objRecSub.federalidnumber;
                 objRecSub.taxcode = 'SST ' + (inTaxRate ? inTaxRate : '');
                 objRecSub.taxlabel = 'SST';
                 objRecSub.hastax = true;
@@ -49,8 +50,7 @@ define(['N/query', 'N/currency'],
             } else if (objRecordFields.inSubsidiary == objSubsidiary.ServiceRocket_Pte_Ltd) {
                 objRecSub.federalidnumber = '';
                 objRecSub.taxcode = 'GST ' + (inTaxRate ? inTaxRate : '');
-                objRecSub.taxlabel = 'GST';
-                objRecSub.hastax = true;
+                objRecSub.hastax = false;
             } else if (objRecordFields.inSubsidiary == objSubsidiary.ServiceRocket_SpA) {
                 objRecSub.federalidnumber = objRecSub.federalidnumber;
                 objRecSub.taxcode = 'GST ' + (inTaxRate ? inTaxRate : '');

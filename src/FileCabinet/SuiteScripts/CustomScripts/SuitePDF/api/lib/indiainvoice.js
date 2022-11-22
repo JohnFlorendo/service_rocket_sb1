@@ -42,6 +42,10 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                         objRecSub.item[idLastItem].amount_id = objRecSub.item[nLine1].amount_id;
                         objRecSub.item[idLastItem].amount = (objRecSub.item[idLastItem].amount_id).toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
                     }
+
+                    if (idLastDiscount != -1) {
+                        objRecSub.item[idLastItem].tax1amt = objRecSub.item[nLine1].tax1amt;
+                    }
                 }
                 else if (objRecSub.item[nLine1].item_id == DISCOUNT) {
 
@@ -78,6 +82,7 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
                     objRecSub.item[nLine1].amount = (recPrint.getSublistValue({sublistId: 'item', fieldId: 'amount', line: nLine1}) /  inExchangeRate).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                     objRecSub.item[nLine1].grossamt = (recPrint.getSublistValue({sublistId: 'item', fieldId: 'grossamt', line: nLine1}) /  inExchangeRate).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                     objRecSub.item[nLine1].description = recPrint.getSublistValue({sublistId: 'item', fieldId: 'description', line: nLine1}).replace(/(?:\r\n|\r|\n)/g, '<br />').replace('&', '&amp;');
+                    objRecSub.item[nLine1].arrLineDescription = objRecSub.item[nLine1].description.replace(/&/g, '&amp;').split('\n');
 
                     idLastItem = nLine1;
                     idLastDiscount = -1;
@@ -275,13 +280,9 @@ define(['N/record', 'N/search', 'N/file', './helper', '../../../Library/handleba
             }
 
             objRecSub.billingaddress = objRecSub.billingaddress.replace(/&/g, '&amp;');
-            objRecSub.primarycontact = helper.getPrimaryContact({
-                record: recPrint
-            });
-            objRecSub.paymentinstruction = helper.getPaymentInstruction({
-                record: recPrint
-            });
-            objRecSub.paymentinstruction = objRecSub.paymentinstruction.replace(/<BR>/g, '<br />');
+            objRecSub.primarycontact = helper.getPrimaryContact({ record: recPrint });
+            objRecSub.paymentinstruction = helper.getPaymentInstruction({ record: recPrint });
+            objRecSub.paymentinstruction = objRecSub.paymentinstruction.replace(/<BR>/g, '<br />').replace(/&nbsp;/g, ' ');
 
             var sTemplate = file.load(libFunctions.templateId().indiaInvoice);
             var sHandlebar = handlebars.compile(sTemplate.getContents());

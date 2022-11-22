@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+
+<head>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    <script src="https://code.highcharts.com/gantt/highcharts-gantt.js"></script>
+    <script src="https://code.highcharts.com/gantt/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/gantt/modules/accessibility.js"></script>
+    <style>
+    .highcharts-credits {
+         font-size: 0px !important;
+    }
+    #project {
+        max-width: 100%;
+        margin: 1em auto;
+    }
+   </style>
+</head>
+
+<body padding="0px 0px 0px 0px" size="A4">
+    <div class="d-flex justify-content-center" id="project"></div>
+<script>
+    var today = new Date(),
+        day = 1000 * 60 * 60 * 24,
+        dateFormat = Highcharts.dateFormat,
+        defined = Highcharts.defined,
+        isObject = Highcharts.isObject;
+        today.setUTCHours(0);
+        today.setUTCMinutes(0);
+        today.setUTCSeconds(0);
+        today.setUTCMilliseconds(0);
+        today = today.getTime();
+
+    Highcharts.ganttChart('project', {
+        chart:{
+            width: 1200
+        },
+        exporting: {
+            chartOptions: {
+                chart: {
+                    width: 1700,
+                    height: 1050
+                },
+                style: {
+                    fontSize: '10px'
+                }
+            },
+            scale: 6,
+            buttons: {
+                contextButton: {
+                    menuItems: [
+                        'viewFullscreen',
+                        'downloadPDF',
+                    ]
+                }
+            }
+        },
+        series: [
+            {{#each tasks}} 
+            {
+                name: '{{name}}',
+                data: [
+                    {
+                        name: '{{name}}',
+                        id: '{{id}}',
+                    },            
+                    {{#each this.tasks}}
+                    {
+                        name: '{{name}}',
+                        id: '{{taskid}}',
+                        parent: '{{parent}}',
+                        owner: '{{owner}}',
+                        start: Date.UTC({{startyear}}, {{startmonth}}, {{startdate}}, 0),
+                        end: Date.UTC({{endyear}}, {{endmonth}}, {{endday}}, 24),
+                    },
+                    {{/each}}
+                ]
+            },
+            {{/each}}
+        ],
+        tooltip: {
+            pointFormatter: function () {
+                var point = this,
+                    format = '%e. %b',
+                    options = point.options,
+                    completed = options.completed,
+                    amount = isObject(completed) ? completed.amount : completed,
+                    status = ((amount || 0) * 100) + '%',
+                    lines;
+
+                lines = [{
+                    value: point.name,
+                    style: 'font-weight: bold;'
+                }, {
+                    title: 'Start',
+                    value: dateFormat(format, point.start)
+                }, {
+                    visible: !options.milestone,
+                    title: 'End',
+                    value: dateFormat(format, point.end)
+                }, {
+                    title: 'Completed',
+                    value: status
+                }, {
+                    title: 'Owner',
+                    value: options.owner || 'unassigned'
+                }];
+
+                return lines.reduce(function (str, line) {
+                    var s = '',
+                        style = (
+                            defined(line.style) ? line.style : 'font-size: 0.8em;'
+                        );
+                    if (line.visible !== false) {
+                        s = (
+                            '<span style="' + style + '">' +
+                            (defined(line.title) ? line.title + ': ' : '') +
+                            (defined(line.value) ? line.value : '') +
+                            '</span><br/>'
+                        );
+                    }
+                    return str + s;
+                }, '');
+            }
+        },
+        title: {
+            text: '{{projectname}}'
+        },
+        xAxis: {
+            currentDateIndicator: false
+        },
+        accessibility: {
+            keyboardNavigation: {
+                seriesNavigation: {
+                    mode: 'serialize'
+                }
+            },
+            point: {
+                descriptionFormatter: function (point) {
+                    var completedValue = point.completed ?
+                            point.completed.amount || point.completed : null,
+                        completed = completedValue ?
+                            ' Task ' + Math.round(completedValue * 1000) / 10 + '% completed.' :
+                            '',
+                        dependency = point.dependency &&
+                            point.series.chart.get(point.dependency).name,
+                        dependsOn = dependency ? ' Depends on ' + dependency + '.' : '';
+
+                    return Highcharts.format(
+                        point.milestone ?
+                            '{point.yCategory}. Milestone at {point.x:%Y-%m-%d}. Owner: {point.owner}.{dependsOn}' :
+                            '{point.yCategory}.{completed} Start {point.x:%Y-%m-%d}, end {point.x2:%Y-%m-%d}. Owner: {point.owner}.{dependsOn}',
+                        { point, completed, dependsOn }
+                    );
+                }
+            }
+        },
+        lang: {
+            accessibility: {
+                axis: {
+                    xAxisDescriptionPlural: 'The chart has a two-part X axis showing time in both week numbers and days.'
+                }
+            }
+        }
+});
+
+</script>
+</body>

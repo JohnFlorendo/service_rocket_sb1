@@ -1,7 +1,12 @@
-define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './approver','./approvalmxtaccess'],
+define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './approver', './approvalmxtaccess'],
 
-    function (email, record, file, query, runtime, matrix, approver,approvalmxtaccess) {
+    function (email, record, file, query, runtime, matrix, approver, approvalmxtaccess) {
         var idUser = runtime.getCurrentUser().id;
+        var nameUser = runtime.getCurrentUser().name;
+        var userRole = runtime.getCurrentUser().role;
+        var approvalStatus = getApprovalStatus();
+
+        const requsitionRole = 1181;
 
         initialize = function (option) {
 
@@ -9,7 +14,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
             var sRecord = option.record;
 
             var sSql = file.load({
-                id: 303650 //matrix.sql
+                id: '../../sql/matrix.sql'
             }).getContents();
 
             var custParam = {
@@ -48,7 +53,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
 
                 rec.setValue({
                     fieldId: objMatrix.matrixstatusfield,
-                    value: 1
+                    value: approvalStatus['Not Submitted']
                 });
 
                 rec.setValue({
@@ -71,46 +76,65 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
         submit = function (option) {
             var objData = {};
             var objApprover = approver.nextManager(option);
-
+            log.audit('option', option)
             var rec = record.load({
                 type: option.record,
                 id: option.recordid,
                 isDynamic: true
             });
 
-            rec.setValue({
-                fieldId: objApprover.approverfield,
-                //value: objApprover.approver
-                value: 1060242
-            });
+            if(objApprover != undefined) {
+                rec.setValue({
+                    fieldId: objApprover.approverfield,
+                    value: objApprover.approver
 
-            rec.setValue({
-                fieldId: objApprover.statusfield,
-                value: 1//pending approval
-            });
+                });
 
-            rec.setValue({
-                fieldId: objApprover.matrixstatusfield,
-                value: 3//pending approval
-            });
+                rec.setValue({
+                    fieldId: objApprover.statusfield,
+                    value: 1//pending approval
+                });
 
-            var stBody = "<br />Hi " + rec.getText('nextapprover') + ", You have a Purchase Request to Approve. <br /><br />";
-            stBody += "<a href='app/accounting/transactions/purchreq.nl?id=" + option.recordid + "'>View Purchase Request.</a>"
+                rec.setValue({
+                    fieldId: objApprover.matrixstatusfield,
+                    value: approvalStatus['Pending Approval']
+                });
 
-            objData = {
-                recipientId: rec.getValue('nextapprover'),
-                body: stBody
+
+                var stBody = generateTemplate({
+                    header: "Hi " + rec.getText('nextapprover') + "<br/>You have a Purchase Requisition request to Approve",
+                    body: "<p><b>Description: </b>" + rec.getText('memo') + "</p>" +
+                        "<p><b>Notes and Supporting Info: </b>" + rec.getText('custbody_purchase_notes') + "</p>",
+                    recordid: option.recordid
+                });
+
+                objData = {
+                    recipientId: rec.getValue('nextapprover'),
+                    body: stBody
+                }
+
+                sendEmailNotification(objData, rec);
+
+                rec.save();
+            } else {
+                var objMatrix = matrix.get(option.record);
+
+                rec.setValue({
+                    fieldId: objMatrix.statusfield,
+                    value: 1//pending approval
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Pending Approval']
+                });
+
+                rec.save();
             }
-
-            sendEmailNotification(objData, rec);
-
-            rec.save();
-
         };
 
         edit = function (option) {
-
-            var objApprover = approver.nextManager(option);
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -119,18 +143,18 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
             });
 
             rec.setValue({
-                fieldId: objApprover.approverfield,
+                fieldId: objMatrix.approverfield,
                 value: ''
             });
 
             rec.setValue({
-                fieldId: objApprover.statusfield,
+                fieldId: objMatrix.statusfield,
                 value: 1//pending approval
             });
 
             rec.setValue({
-                fieldId: objApprover.matrixstatusfield,
-                value: 1//not submitted
+                fieldId: objMatrix.matrixstatusfield,
+                value: approvalStatus['Not Submitted']
             });
 
             rec.save();
@@ -138,8 +162,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
         };
 
         cancel = function (option) {
-
-            var objApprover = approver.nextManager(option);
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -148,18 +171,18 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
             });
 
             rec.setValue({
-                fieldId: objApprover.approverfield,
+                fieldId: objMatrix.approverfield,
                 value: ''
             });
 
             rec.setValue({
-                fieldId: objApprover.statusfield,
+                fieldId: objMatrix.statusfield,
                 value: 3//rejected
             });
 
             rec.setValue({
-                fieldId: objApprover.matrixstatusfield,
-                value: 2//Cancelled
+                fieldId: objMatrix.matrixstatusfield,
+                value: approvalStatus['Cancelled']
             });
 
             rec.save();
@@ -168,7 +191,12 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
 
         approve = function (option) {
             var objData = {};
+            var isRequisitionRole = userRole == requsitionRole;
+
             var objApprover = approver.nextManager(option);
+            log.audit('objApprover', objApprover);
+
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -176,27 +204,64 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
                 isDynamic: true
             });
 
-            var stBody = "<br />Your Purchase Request has been approved by " + rec.getText('nextapprover') + "<br /><br />";
-            stBody += "<a href='app/accounting/transactions/purchreq.nl?id=" + option.recordid + "'>View Purchase Request.</a>"
+            if (objApprover != undefined && rec.getValue('custbody_sequentialapproval') == true && !isRequisitionRole) {
 
-            rec.setValue({
-                fieldId: objApprover.approverfield,
-                value: ''
-            });
+                var stBody = generateTemplate({
+                    header: "Hi " + rec.getText('nextapprover') + "<br/>You have a Purchase Requisition request to Approve",
+                    body: "<p><b>Description: </b>" + rec.getText('memo') + "</p>" +
+                        "<p><b>Notes and Supporting Info: </b>" + rec.getText('custbody_purchase_notes') + "</p>",
+                    recordid: option.recordid
+                });
 
-            rec.setValue({
-                fieldId: objApprover.statusfield,
-                value: 2//approved
-            });
+                rec.setValue({
+                    fieldId: objMatrix.approverfield,
+                    value: objApprover.approver
+                });
 
-            rec.setValue({
-                fieldId: objApprover.matrixstatusfield,
-                value: 5//approved
-            });
+                rec.setValue({
+                    fieldId: objMatrix.statusfield,
+                    value: 1//pending approval
+                });
 
-            objData = {
-                recipientId: rec.getValue('entity'),
-                body: stBody
+                rec.setValue({
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Pending Approval']
+                });
+
+                objData = {
+                    recipientId: rec.getValue('nextapprover'),
+                    body: stBody
+                }
+
+            } else {
+
+                var stBody = generateTemplate({
+                    header: "Your Purchase Requisition request has been approved by " + nameUser,
+                    body: "<p><b>Description: </b>" + rec.getText('memo') + "</p>" +
+                        "<p><b>Notes and Supporting Info: </b>" + rec.getText('custbody_purchase_notes') + "</p>",
+                    recordid: option.recordid
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.approverfield,
+                    value: ''
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.statusfield,
+                    value: 2//approved
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Approved']
+                });
+
+                objData = {
+                    recipientId: rec.getValue('entity'),
+                    body: stBody
+                }
+
             }
 
             sendEmailNotification(objData, rec);
@@ -207,7 +272,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
 
         reject = function (option) {
             var objData = {};
-            var objApprover = approver.nextManager(option);
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -215,29 +280,26 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
                 isDynamic: true
             });
 
-            var stBody = "<br />Your Purchase Request has been rejected by " + rec.getText('nextapprover') + "<br /><br />";
-            stBody += "Reject notes: " + option.notes + "<br /><br />";
-            stBody += "<a href='app/accounting/transactions/purchreq.nl?id=" + option.recordid + "'>View Purchase Request.</a>"
+            var stBody = generateTemplate({
+                header: "Your Purchase Requisition request has been rejected by " + nameUser,
+                body: "<p><b>Rejection Reason:</b>" + option.notes + "</p>",
+                recordid: option.recordid
+            });
 
             rec.setValue({
-                fieldId: objApprover.approverfield,
+                fieldId: objMatrix.approverfield,
                 value: ''
             });
 
             rec.setValue({
-                fieldId: objApprover.statusfield,
+                fieldId: objMatrix.statusfield,
                 value: 3
             });
 
             rec.setValue({
-                fieldId: objApprover.matrixstatusfield,
-                value: 6
+                fieldId: objMatrix.matrixstatusfield,
+                value: approvalStatus['Rejected']
             });
-
-            // rec.setValue({
-            //     fieldId: 'custbody_purchase_notes',
-            //     value: option.notes
-            // });
 
             createNoteForReject(option);
 
@@ -254,7 +316,12 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
 
         procurementReview = function (option) {
             var objData = {};
+            var isRequisitionRole = userRole == requsitionRole;
+
             var objApprover = approver.nextManager(option);
+            log.audit('objApprover', objApprover);
+
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -262,27 +329,64 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
                 isDynamic: true
             });
 
-            var stBody = "<br />Your Purchase Request has been approved by " + rec.getText('nextapprover') + "<br /><br />";
-            stBody += "<a href='app/accounting/transactions/purchreq.nl?id=" + option.recordid + "'>View Purchase Request.</a>"
+            if (objApprover != undefined && rec.getValue('custbody_sequentialapproval') == true && !isRequisitionRole) {
 
-            rec.setValue({
-                fieldId: objApprover.approverfield,
-                value: ''
-            });
+                var stBody = generateTemplate({
+                    header: "Hi " + rec.getText('nextapprover') + "<br/>You have a Purchase Requisition request to Approve",
+                    body: "<p><b>Description: </b>" + rec.getText('memo') + "</p>" +
+                        "<p><b>Notes and Supporting Info: </b>" + rec.getText('custbody_purchase_notes') + "</p>",
+                    recordid: option.recordid
+                });
 
-            rec.setValue({
-                fieldId: objApprover.statusfield,
-                value: 2//approved
-            });
+                rec.setValue({
+                    fieldId: objMatrix.approverfield,
+                    value: objApprover.approver
+                });
 
-            rec.setValue({
-                fieldId: objApprover.matrixstatusfield,
-                value: 7//Procurement Review Needed
-            });
+                rec.setValue({
+                    fieldId: objMatrix.statusfield,
+                    value: 1//pending approval
+                });
 
-            objData = {
-                recipientId: rec.getValue('entity'),
-                body: stBody
+                rec.setValue({
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Pending Approval']
+                });
+
+                objData = {
+                    recipientId: rec.getValue('nextapprover'),
+                    body: stBody
+                }
+
+            } else {
+
+                var stBody = generateTemplate({
+                    header: "Your Purchase Requisition request has been approved by " + nameUser,
+                    body: "<p><b>Description: </b>" + rec.getText('memo') + "</p>" +
+                        "<p><b>Notes and Supporting Info: </b>" + rec.getText('custbody_purchase_notes') + "</p>",
+                    recordid: option.recordid
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.approverfield,
+                    value: ''
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.statusfield,
+                    value: 2//approved
+                });
+
+                rec.setValue({
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Procurement Review Needed']
+                });
+
+                objData = {
+                    recipientId: rec.getValue('entity'),
+                    body: stBody
+                }
+
             }
 
             sendEmailNotification(objData, rec);
@@ -292,8 +396,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
         };
 
         spendScheduleUpdated = function (option) {
-            var objData = {};
-            var objApprover = approver.nextManager(option);
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -301,50 +404,37 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
                 isDynamic: true
             });
 
-            var stBody = "<br />Your Purchase Request has been approved by " + rec.getText('nextapprover') + "<br /><br />";
-            stBody += "<a href='app/accounting/transactions/purchreq.nl?id=" + option.recordid + "'>View Purchase Request.</a>"
-
-            var prevStatus=rec.getValue({
-                fieldId: objApprover.matrixstatusfield
+            var prevStatus = rec.getValue({
+                fieldId: objMatrix.matrixstatusfield
             });
 
             rec.setValue({
-                fieldId: objApprover.approverfield,
+                fieldId: objMatrix.approverfield,
                 value: ''
             });
 
             rec.setValue({
-                fieldId: objApprover.statusfield,
+                fieldId: objMatrix.statusfield,
                 value: 2//approved
             });
 
-            if(prevStatus==7){
+            if (prevStatus == 7) {
                 rec.setValue({
-                    fieldId: objApprover.matrixstatusfield,
-                    value: 8//Spend Schedule Reviewed
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Spend Schedule Reviewed']
                 });
-            }else if(prevStatus==9){
+            } else if (prevStatus == 9) {
                 rec.setValue({
-                    fieldId: objApprover.matrixstatusfield,
-                    value: 5//Approved
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Approved']
                 });
             }
-
-
-            objData = {
-                recipientId: rec.getValue('entity'),
-                body: stBody
-            }
-
-            //sendEmailNotification(objData, rec);
 
             rec.save();
-
         };
 
         dataChecked = function (option) {
-            var objData = {};
-            var objApprover = approver.nextManager(option);
+            var objMatrix = matrix.get(option.record);
 
             var rec = record.load({
                 type: option.record,
@@ -352,49 +442,53 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
                 isDynamic: true
             });
 
-            var stBody = "<br />Your Purchase Request has been approved by " + rec.getText('nextapprover') + "<br /><br />";
-            stBody += "<a href='app/accounting/transactions/purchreq.nl?id=" + option.recordid + "'>View Purchase Request.</a>"
-
-            var prevStatus=rec.getValue({
-                fieldId: objApprover.matrixstatusfield
+            var prevStatus = rec.getValue({
+                fieldId: objMatrix.matrixstatusfield
             });
 
             rec.setValue({
-                fieldId: objApprover.approverfield,
+                fieldId: objMatrix.approverfield,
                 value: ''
             });
 
             rec.setValue({
-                fieldId: objApprover.statusfield,
+                fieldId: objMatrix.statusfield,
                 value: 2//approved
             });
 
-            if(prevStatus==7){
+            if (prevStatus == 7) {
                 rec.setValue({
-                    fieldId: objApprover.matrixstatusfield,
-                    value: 9//Data Checked
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Data Checked']
                 });
-            }else if(prevStatus==8){
+            } else if (prevStatus == 8) {
                 rec.setValue({
-                    fieldId: objApprover.matrixstatusfield,
-                    value: 5//Approved
+                    fieldId: objMatrix.matrixstatusfield,
+                    value: approvalStatus['Approved']
                 });
             }
-
-
-            objData = {
-                recipientId: rec.getValue('entity'),
-                body: stBody
-            }
-
-            //sendEmailNotification(objData, rec);
 
             rec.save();
 
         };
 
-        current = function (option) {
+        getPOStatus = function (option) {
 
+            var idRecord = option.recordid;
+
+            var sSql = file.load({
+                id: '../../sql/linkedtransactions.sql'
+            }).getContents();
+
+            var arrLinkedTx = query.runSuiteQL({
+                query: sSql,
+                params: [idRecord]
+            }).asMappedResults();
+
+            return arrLinkedTx.length;
+        };
+
+        current = function (option) {
             var idRecord = option.recordid;
             var sRecord = option.record;
 
@@ -406,7 +500,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
 
 
             var sSql = file.load({
-                id: 303650 //matrix.sql
+                id: '../../sql/matrix.sql'
             }).getContents();
 
             var custParam = {
@@ -427,7 +521,6 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
 
                 var objMatrix = arrMatrix[0];
 
-                // var idUser = runtime.getCurrentUser().id;
                 var isPRAdmin = approvalmxtaccess.getRequisitionAdminAccess(
                     {
                         custparam: {
@@ -435,58 +528,58 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
                         }
                     }
                 )
-
-                if (rec.getValue(objMatrix.matrixstatusfield) == 1) {
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
-                        return 'submit';
-                    }
-                } else if (rec.getValue(objMatrix.matrixstatusfield) == 2) {
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
+                log.audit(rec.getValue(objMatrix.matrixstatusfield))
+                switch (rec.getValue(objMatrix.matrixstatusfield).toString()) {
+                    case '1':
+                        if (idUser == rec.getValue(objMatrix.ownerfield)) {
+                            return 'submit';
+                        }
+                        break;
+                    case '2':
                         return 'cancelled';
-                    }
-                } else if (rec.getValue(objMatrix.matrixstatusfield) == 3) {
-                    if (idUser == rec.getValue(objMatrix.approverfield)) {
-                        return 'approval';
-                    } else if (idUser == rec.getValue(objMatrix.ownerfield)) {
-                        return 'pending';
-                    }
-                } else if (rec.getValue(objMatrix.matrixstatusfield) == 5) {
-
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
-                        return 'approved';
-                    }else if(isPRAdmin && idUser != rec.getValue(objMatrix.ownerfield)){
-                        return 'approved';
-                    }
-                } else if (rec.getValue(objMatrix.matrixstatusfield) == 6) {
-
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
+                        break;
+                    case '3':
+                        if (idUser == rec.getValue(objMatrix.approverfield)) {
+                            return 'approval';
+                        } else {
+                            return 'pending';
+                        }
+                        break;
+                    case '5':
+                        if (getPOStatus(option)) {
+                            return 'po_pending';
+                        } else {
+                            return 'approved';
+                        }
+                        break;
+                    case '6':
                         return 'rejected';
-                    }
-                }else if (rec.getValue(objMatrix.matrixstatusfield) == 7) {
-                    log.audit('isPRAdmin',isPRAdmin)
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
+                        break;
+                    case '7':
                         return 'procurementreview';
-                    }else if(isPRAdmin ){
-                        return 'procurementreview';
-                    }
-                }else if (rec.getValue(objMatrix.matrixstatusfield) == 8) {
-
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
+                        break;
+                    case '8':
                         return 'spendscheduleupdated';
-                    }else if(isPRAdmin && idUser != rec.getValue(objMatrix.ownerfield)){
-                        return 'spendscheduleupdated';
-                    }
-                }else if (rec.getValue(objMatrix.matrixstatusfield) == 9) {
-
-                    if (idUser == rec.getValue(objMatrix.ownerfield)) {
+                        break;
+                    case '9':
                         return 'datachecked';
-                    }else if(isPRAdmin && idUser != rec.getValue(objMatrix.ownerfield)){
-                        return 'datachecked';
-                    }
+                        break;
                 }
 
             }
         };
+
+        function generateTemplate(option) {
+            var template = file.load({
+                id: '../../template/emailnotification.html'
+            }).getContents();
+
+            template = template.replace('{header}', option.header)
+            template = template.replace('{body}', option.body)
+            template = template.replace('{recordid}', option.recordid)
+
+            return template;
+        }
 
         function sendEmailNotification(objData, rec) {
             email.send({
@@ -508,7 +601,7 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
             });
             objRecord.setValue({
                 fieldId: 'notetype',
-                value: 7
+                value: 9 // System Note - APM (non-editable)
             });
             objRecord.setValue({
                 fieldId: 'note',
@@ -520,8 +613,24 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
             });
 
             var id = objRecord.save();
-            /*log.audit('objRecord', objRecord);
-            log.audit('id', id);*/
+        }
+
+        function getApprovalStatus() {
+            var approvalStatusMapping = {};
+            var sSql = file.load({
+                id: '../../sql/approvalstatus.sql'
+            }).getContents();
+
+            var arrApprovalStatus = query.runSuiteQL({
+                query: sSql
+            }).asMappedResults();
+
+            for (var item in arrApprovalStatus) {
+                var mapping = arrApprovalStatus[item];
+                approvalStatusMapping[mapping.name] = mapping.id
+            }
+
+            return approvalStatusMapping;
         }
 
         return {
@@ -531,10 +640,10 @@ define(['N/email', 'N/record', 'N/file', 'N/query', 'N/runtime', './matrix', './
             approve: approve,
             reject: reject,
             current: current,
-            cancel:cancel,
-            procurementReview:procurementReview,
-            spendScheduleUpdated:spendScheduleUpdated,
-            dataChecked:dataChecked
+            cancel: cancel,
+            procurementReview: procurementReview,
+            spendScheduleUpdated: spendScheduleUpdated,
+            dataChecked: dataChecked
         };
 
     });

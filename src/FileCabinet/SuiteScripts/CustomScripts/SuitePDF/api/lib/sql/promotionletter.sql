@@ -9,6 +9,7 @@ SELECT promotion.name AS promotionid
 	, employee.compensationcurrency AS currency
 	, currency.displaysymbol AS  currencysymbol
 	, BUILTIN.DF(employee.subsidiary) AS subsidiary
+    , BUILTIN.DF(classification.custrecord_plan_budget_owner) AS budgetowner
 	, CASE WHEN promotion.custrecord_rp_newmanager IS NULL THEN BUILTIN.DF(employee.supervisor)
 		ELSE BUILTIN.DF(promotion.custrecord_rp_newmanager) END AS supervisor
 	, CASE WHEN promotion.custrecord_rp_newmanager IS NULL THEN BUILTIN.DF(currentsupervisor.job)
@@ -31,6 +32,8 @@ LEFT JOIN employee hrmanager
 	ON promotion.custrecord_sr_rocketeer = hrmanager.id
 INNER JOIN currency
 	ON employee.currency = currency.id
+INNER JOIN classification
+	ON employee.class = classification.id    
 WHERE promotion.id = {{id}}
 {{}}
 SELECT custrecord_sr_doc_title AS title

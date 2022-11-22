@@ -47,8 +47,9 @@ function(record) {
     function afterSubmit(scriptContext) {
     	
         var newRec = scriptContext.newRecord;
-        
+        log.audit('Start');
       //update billable and non-billable hours on project record
+        log.audit('Status', newRec.getValue({fieldId: 'approvalstatus'}));
         if(newRec.getValue({fieldId: 'approvalstatus'}) == 3){
         	
             for(var nLine=0; nLine  < newRec.getLineCount({sublistId: 'timeitem'}); nLine++) {
@@ -61,9 +62,10 @@ function(record) {
 
                 	try{
 	                	var recJob = record.load({type: record.Type.JOB, id: idJob, isDynamic: true});
-
+                        log.audit('Before', recJob.getValue({fieldId: 'custentity_sf_billable_hours'}));
 	            		recJob.setValue({	fieldId: 'custentity_billable_hours', 
 	            							value : recJob.getValue({fieldId: 'custentity_sf_billable_hours'}) || 0 });
+                        log.audit('After', recJob.getValue({fieldId: 'custentity_sf_billable_hours'}));
 	            		recJob.setValue({	fieldId: 'custentity_nonbillable_hours', 
 	            							value : recJob.getValue({fieldId: 'custentity_sf_nonbillable_hours'}) || 0});
 	            		

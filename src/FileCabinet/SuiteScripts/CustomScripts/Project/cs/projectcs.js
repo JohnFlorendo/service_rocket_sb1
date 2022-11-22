@@ -3,9 +3,9 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/ui/message', 'N/runtime'],
+define(['N/ui/message', 'N/runtime', '../api/project'],
 
-function(message, runtime) {
+function(message, runtime, project) {
     
     /**
      * Function to be executed after page is initialized.
@@ -33,7 +33,13 @@ function(message, runtime) {
      * @since 2015.2
      */
     function fieldChanged(scriptContext) {
+        project.setTemplate({
+            scriptContext: scriptContext
+        })
 
+        project.setTemplateListOnFieldChange({
+            scriptContext: scriptContext
+        })
     }
 
     /**
@@ -150,10 +156,10 @@ function(message, runtime) {
      */
     function saveRecord(scriptContext) {
     	
-    	var currRec = scriptContext.currentRecord;
+    	var recCurr = scriptContext.currentRecord;
     	var idJenniferSzuszan = 8754;
     	
-		if(currRec.getValue({fieldId: 'subsidiary'}) == 1){
+    	if(recCurr.getValue({fieldId: 'subsidiary'}) == 1){
     		
 			if(runtime.getCurrentUser().id != idJenniferSzuszan){
 				
@@ -170,9 +176,78 @@ function(message, runtime) {
 	    			return false;
 				}
 				catch(err){
-					console.log(err);
+
 					return false;
 				}
+			}
+		}
+		else if(recCurr.getValue('custentity4') == 7){ //PS
+			
+            if(recCurr.getValue('jobtype') == 112 || 
+                recCurr.getValue('jobtype') == 119 ||
+                recCurr.getValue('jobtype') == 110 ||
+                recCurr.getValue('jobtype') == 116 ||
+                recCurr.getValue('jobtype') == 117 ||
+                recCurr.getValue('jobtype') == 118){
+
+                return true;
+            }
+
+			if(scriptContext.currentRecord.id){
+				
+				if(recCurr.getValue('entitystatus') == 1 ||
+						recCurr.getValue('entitystatus') == 2){
+					
+                    if(recCurr.getValue('parent') == recCurr.getValue('customer')){
+
+                        var hasNPS = false;
+					
+                        hasNPS = project.checkNPSContact({
+                            record: recCurr
+                        });
+                        
+                        if(!hasNPS){
+                            
+                            var messNps = message.create({
+                                title: 'NPS_SURVEY',
+                                message: "This Project doesn't have an NPS Survey Contact. Please add an NPS Survey Contact under Relationships tab.",
+                                type: message.Type.ERROR
+                            });
+    
+                            messNps.show();
+                            
+                            return false;
+                        }
+                        else{
+
+                            if(hasNPS.hubspotid == null && hasNPS.hubspotid == ''){
+
+                                var messNps = message.create({
+                                    title: 'NPS_SURVEY',
+                                    message: "The NPS Survey Contact does not contain HubSpot ID. Please check if the contact exists in HubSpot, get the HubSpot ID and update the NPS Survey Contact.",
+                                    type: message.Type.ERROR
+                                });
+
+                                    
+                                messNps.show();
+                                
+                                return false;
+                            }
+                        }
+                    }
+				}
+			}
+			else{
+				
+				if(recCurr.getValue('entitystatus') == 1 || 
+						recCurr.getValue('entitystatus') == 2){
+					
+					recCurr.setValue({
+						fieldId: 'entitystatus',
+						value: 4 //To Be Setup
+					});
+				}
+
 			}
 		}
 		
@@ -181,7 +256,7 @@ function(message, runtime) {
 
     return {
 //        pageInit: pageInit,
-//        fieldChanged: fieldChanged,
+        fieldChanged: fieldChanged,
 //        postSourcing: postSourcing,
 //        sublistChanged: sublistChanged,
 //        lineInit: lineInit,
@@ -189,7 +264,7 @@ function(message, runtime) {
 //        validateLine: validateLine,
 //        validateInsert: validateInsert,
 //        validateDelete: validateDelete,
-        saveRecord: saveRecord
+//        saveRecord: saveRecord
     };
     
 });

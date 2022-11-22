@@ -3,9 +3,9 @@
  * @NScriptType UserEventScript
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/runtime', '../../Box/box', '../api/project'],
+define(['N/record', 'N/runtime', 'N/ui/serverWidget', 'N/file', '../../Box/box', '../api/project'],
 
-function(record, runtime, box, project) {
+function(record, runtime, serverWidget, file, box, project) {
    
     /**
      * Function definition to be triggered before record is loaded.
@@ -20,8 +20,37 @@ function(record, runtime, box, project) {
 
     	try{
     		
+            //Set the list of projects Templates based on the Project Template Mapping Record
+            project.setTemplateListBeforeLoad({
+                scriptContext: scriptContext
+            })
+            
     		 if(scriptContext.type == scriptContext.UserEventType.VIEW || scriptContext.type == scriptContext.UserEventType.EDIT) {
+
     			 project.getLatestRAG(scriptContext);
+
+                 if(scriptContext.type == scriptContext.UserEventType.VIEW){
+
+                    var form = scriptContext.form;
+
+                    var html = file.load({
+                        id: '../btn/btn.html'
+                    }).getContents(); //btn.html
+    
+                    var insertHml = form.addField({
+                        id: 'custpage_pa_jquery1',
+                        type: serverWidget.FieldType.INLINEHTML,
+                        label: 'JQ'
+                    });
+
+                    insertHml.defaultValue = html.replace(/{{id}}/g, scriptContext.newRecord.id);
+
+                    form.addButton({
+                        id: 'custpage_btn_scopingdoc',
+                        label: 'Scoping Document ',
+                        functionName: 'printScopingDoc'
+                    });
+                }
     		 }
     	}
     	catch(err){
@@ -58,14 +87,17 @@ function(record, runtime, box, project) {
 
         	var isUpdated = false;
             var newRecord = scriptContext.newRecord;
-            var newRec = record.load({type: newRecord.type, id: newRecord.id, isDynamic : true });
+            var oldRecord = scriptContext.oldRecord;
+            var newRec = record.load({
+            	type: newRecord.type, 
+            	id: newRecord.id, 
+            	isDynamic : true 
+            });
             
             if(scriptContext.type == scriptContext.UserEventType.CREATE || scriptContext.type == scriptContext.UserEventType.EDIT) {
          	
             	if(scriptContext.type == scriptContext.UserEventType.CREATE && runtime.executionContext === runtime.ContextType.USER_INTERFACE){
-            		
-            		
-            		
+
             		//***updated,deployed 10 Mar 2021 ITSM-666
             		
             		var idParent = newRec.getValue({fieldId: 'parent'});
@@ -84,8 +116,20 @@ function(record, runtime, box, project) {
             		isUpdated = true;
             		
             	}
-            	else if(scriptContext.type == scriptContext.UserEventType.EDIT && runtime.executionContext === runtime.ContextType.USER_INTERFACE){
+            	else if(scriptContext.type == scriptContext.UserEventType.EDIT && 
+            			runtime.executionContext === runtime.ContextType.USER_INTERFACE){
             		
+            		if(newRecord.getValue('custentity4') == 7){
+            			
+            			if(newRecord.getValue('parent') == newRecord.getValue('customer')){
+            				
+            				var respNps = project.sendNPS({
+            					newrecord: newRecord,
+            					oldrecord: oldRecord
+            				});	
+                		}
+            		}
+
             		newRec = project.updateHours(newRec);
             		isUpdated = true;
             	}
@@ -115,8 +159,12 @@ function(record, runtime, box, project) {
             
             
         }
-        catch(err) { 
-        	log.audit({title: 'projectue.afterSubmit', details: 'error' + err}); 
+        catch(err) {
+        	
+        	log.audit({
+        		title: 'projectue.afterSubmit', 
+        		details: 'error' + err
+        	}); 
         }
     }
 

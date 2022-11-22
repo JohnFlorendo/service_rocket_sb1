@@ -77,7 +77,7 @@ define(['N/format', 'N/task', 'N/search', 'N/record', 'N/url', 'N/ui/message', '
 
         function afterSubmit(context) {
             var newRecord = context.newRecord;
-
+            
             if (newRecord.id != null) {
                 if (newRecord.type == Purchase_Order) {
                     var intRequisitionId = libFieldMapping.getRequisitionId(newRecord.id);
@@ -85,12 +85,16 @@ define(['N/format', 'N/task', 'N/search', 'N/record', 'N/url', 'N/ui/message', '
                         var intPurchaseOrderId = newRecord.id;
                         var arrSpendSchedules = libFieldMapping.getSpendSchedules(intRequisitionId, intPurchaseOrderId);
                         if (arrSpendSchedules.length != 0) {
-                            var mrTask = task.create({taskType: task.TaskType.MAP_REDUCE});
-                            mrTask.scriptId = 'customscript_sr_mr_update_spend_schedule';
-                            mrTask.deploymentId = 'customdeploy_sr_mr_update_spend_schedule';
-                            mrTask.params = {'custscript_param_arrdata': JSON.stringify(arrSpendSchedules)};
-                            var mrTaskId = mrTask.submit();
-                            log.debug('mrTaskId', mrTaskId);
+                            try {
+                                var mrTask = task.create({taskType: task.TaskType.MAP_REDUCE});
+                                mrTask.scriptId = 'customscript_sr_mr_update_spend_schedule';
+                                // mrTask.deploymentId = 'customdeploy_sr_mr_update_spend_schedule';
+                                mrTask.params = {'custscript_param_arrdata': JSON.stringify(arrSpendSchedules)};
+                                var mrTaskId = mrTask.submit();
+                                log.debug('mrTaskId', mrTaskId);
+                            } catch (e) {
+                                throw {message: " A purchase order is created but the spend schedule is not create because all deployments are being processed. Please contact your administrator to increase the deployment."}.message
+                            }
                         }
                     }
                 } else {

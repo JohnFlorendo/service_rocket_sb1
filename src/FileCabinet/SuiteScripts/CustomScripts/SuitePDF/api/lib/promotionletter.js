@@ -4,7 +4,7 @@ function(file, query, render, runtime, handlebars, suitebox, helper) {
 	
 	generate = function(option){
 		
-		var sTemplate = file.load(223193);//222775	
+		var sTemplate = file.load(223193);	
     	var sHandlebar = handlebars.compile(sTemplate.getContents());
     	var arrSql = (file.load(223092).getContents()).split('{{}}');	
     	

@@ -47,14 +47,19 @@ function(record) {
     function afterSubmit(scriptContext) {
     	
     	var newRec = scriptContext.newRecord;
-    	
+    	var oldRec = scriptContext.oldRecord;
+
     	
     	//update billable and non-billable hours on project record
     	if(newRec.getValue({fieldId: 'customer'}) != null && newRec.getValue({fieldId: ''}) != 'customer'){
 
     		try{
-    			
-        		var idJob = newRec.getValue({fieldId: 'customer'});
+				if (scriptContext.type == scriptContext.UserEventType.DELETE) {
+					var idJob = oldRec.getValue({fieldId: 'customer'});
+				} else {
+					var idJob = newRec.getValue({fieldId: 'customer'});
+				}
+
         		var recJob = record.load({type: record.Type.JOB, id: idJob, isDynamic: true});
         		
         		recJob.setValue({	fieldId: 'custentity_billable_hours', 
@@ -63,8 +68,7 @@ function(record) {
 									value : recJob.getValue({fieldId: 'custentity_sf_nonbillable_hours'}) || 0});
         		
         		var idJob = recJob.save();
-    		}
-    		catch(err){
+    		}    		catch(err){
     			log.audit({ title: 'afterSubmit', details: 'err: ' + err});
     			//15091
     		}

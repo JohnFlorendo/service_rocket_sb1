@@ -3,267 +3,329 @@
  * @NScriptType UserEventScript
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', '../../Library/handlebars', '../api/approvalmatrix'],
-    /**
-     * @param {record} record
-     */
-    function (record, file, serverWidget, runtime, error, handlebars, approvalmatrix) {
+define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/query', 'N/currency', 'N/redirect', '../../Library/handlebars', '../api/approvalmatrix', 'N/ui/message'],
 
-        /**
-         * Function definition to be triggered before record is loaded.
-         *
-         * @param {Object} scriptContext
-         * @param {Record} scriptContext.newRecord - New record
-         * @param {string} scriptContext.type - Trigger type
-         * @param {Form} scriptContext.form - Current form
-         * @Since 2015.2
-         */
-/*
-        const pr_adminroles = [4,1181, 1349, 1177, 1330, 1324, 1331, 1322, 1176, 1334, 1320, 1323, 1337, 1321, 1319, 1300, 1311];
-*/
-        const pr_adminroles = [3,50,8,41, 1179, 1180, 1181, 1017, 1187, 1330, 1178, 1305, 1324, 1331, 1334, 1326,1327,19];
+    function (record, file, serverWidget, runtime, error, query, currency, redirect, handlebars, approvalmatrix, message) {
 
+        const requisitionRole = [1181, 1349]; //Requisition role
+        const accountantRole = [1017, 1336]; //Rocketeer Accountant role
+        const rocketeerRole = [1022, 1185]; //Rocketeer role
 
-        function createButton(form, newRec, arrButtons) {
-            var sTemplate = file.load({
-                id: '../btn/btnhtml.html'
-            }).getContents();
-
-            var insertHml = form.addField({
-                id: 'custpage_pa_jquery1',
-                type: serverWidget.FieldType.INLINEHTML,
-                label: 'JQ'
-            });
-
-            var sHandlebar = handlebars.compile(sTemplate);
-            var sHtml = sHandlebar({
-                record: newRec.type,
-                id: newRec.id
-            });
-
-            insertHml.defaultValue = sHtml;
-
-            arrButtons.forEach(function (objButton) {
-                form.addButton(objButton);
-            })
-
-        }
+        const oldForm = 144;
+        const shefeeque = 9140;
+        const wendy = 981377;
 
         function beforeLoad(scriptContext) {
-            try {
+            var newRec = scriptContext.newRecord
+            var userId = runtime.getCurrentUser().id;
+            var userRole = runtime.getCurrentUser().role;
 
+            var isPRAdmin = requisitionRole.indexOf(userRole) != -1;
+            var isRocketeerAccountant = accountantRole.indexOf(userRole) != -1;
+            var isRocketeer = rocketeerRole.indexOf(userRole) != -1;
 
-                var newRec = scriptContext.newRecord
-                var idUser = runtime.getCurrentUser().id;
+            var form = scriptContext.form;
 
-                var isPRAdmin = approvalmatrix.getRequisitionAdminAccess(
-                    {
-                        custparam: {
-                            userid: idUser
+            if (scriptContext.type == scriptContext.UserEventType.VIEW) {
+
+                var sStatus = approvalmatrix.current({
+                    record: newRec.type,
+                    recordid: newRec.id
+                });
+
+                log.audit({
+                    title: 'approvalmatrix',
+                    details: 'sStatus: ' + sStatus
+                });
+
+                switch (sStatus) {
+                    case 'submit':
+                        var arrButtons = [
+                            {
+                                id: 'custpage_btn_submit',
+                                label: 'Submit For Approval',
+                                functionName: 'submitforapproval'
+                            }
+                        ]
+
+                        var displayStatus = 'Not Submitted'
+
+                        var stTitleLabel = '<script>'
+                        stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                            'var stLabel = \'' + displayStatus + '\';' +
+                            'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                        stTitleLabel += '</script>'
+
+                        form.addField({
+                            id: 'custpage_statuslabel2',
+                            label: 'not shown - hidden`',
+                            type: serverWidget.FieldType.INLINEHTML
+                        }).defaultValue = stTitleLabel;
+
+                        approvalmatrix.buttons({
+                            form: form,
+                            newRec: newRec,
+                            arrButtons: arrButtons
+                        });
+                        break;
+
+                    case 'cancelled':
+                        if (newRec.type == 'purchaserequisition') {
+
+                            form.removeButton('edit');
+
+                            var stTitleLabel = '<script>'
+
+                            stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                                'var stLabel = \'' + sStatus + '\';' +
+                                'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                            stTitleLabel += '</script>'
+
+                            form.addField({
+                                id: 'custpage_statuslabel',
+                                label: 'not shown - hidden',
+                                type: serverWidget.FieldType.INLINEHTML
+                            }).defaultValue = stTitleLabel;
                         }
-                    }
-                )
+                        break;
 
-                var form = scriptContext.form;
+                    case 'procurementreview':
 
-                if (scriptContext.type == scriptContext.UserEventType.VIEW) {
+                        var objData = {};
+                        objData.expirydate = newRec.getValue('custbody_sr_expiry_date');
 
-                    var sStatus = approvalmatrix.current({
-                        record: newRec.type,
-                        recordid: newRec.id
-                    });
+                        objData.paymentmethod = newRec.getValue('custbody_payment_method_purchasing');
 
-                    log.audit({
-                        title: 'approvalmatrix',
-                        details: 'sStatus: ' + sStatus
-                    });
 
-                    switch (sStatus) {
-                        case 'submit':
+                        if (newRec.type == 'purchaserequisition') {
+
                             var arrButtons = [
                                 {
-                                    id: 'custpage_btn_submit',
-                                    label: 'Submit For Approval',
-                                    functionName: 'submitforapproval'
+                                    id: 'custpage_btn_spendschedupdated',
+                                    label: 'Spend Schedule Updated',
+                                    functionName: 'spendScheduleUpdated'
+                                }, {
+                                    id: 'custpage_btn_datachecked',
+                                    label: 'Data Checked',
+                                    functionName: 'dataChecked(' + JSON.stringify(objData) + ')'
+                                }
+
+                            ]
+
+                            var displayStatus = 'PENDING ORDER(Procurement Review Needed)'
+
+                            var stTitleLabel = '<script>'
+                            stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                                'var stLabel = \'' + displayStatus + '\';' +
+                                'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                            stTitleLabel += '</script>'
+
+                            form.addField({
+                                id: 'custpage_statuslabel2',
+                                label: 'not shown - hidden`',
+                                type: serverWidget.FieldType.INLINEHTML
+                            }).defaultValue = stTitleLabel;
+
+
+                            if (isPRAdmin) {
+                                if (!objData.paymentmethod || !objData.expirydate) {
+                                    form.addPageInitMessage({
+                                        type: message.Type.WARNING,
+                                        title: 'WARNING: (For Procurement Team only. The PR Requestor and Approver can ignore this message)',
+                                        message: 'Expiry Date or Payment Method fields are empty. This PR has been approved and will proceed to the next phase (PO and Payment)'
+                                    })
+                                }
+
+                                approvalmatrix.buttons({
+                                    form: form,
+                                    newRec: newRec,
+                                    arrButtons: arrButtons
+                                });
+                            }
+
+                            form.removeButton('createpo');
+
+                            if (!isPRAdmin) {
+                                form.removeButton('edit');
+                            }
+
+                        }
+                        break;
+
+                    case 'spendscheduleupdated':
+                        if (newRec.type == 'purchaserequisition') {
+
+                            var objData = {};
+                            objData.expirydate = newRec.getValue('custbody_sr_expiry_date');
+
+                            objData.paymentmethod = newRec.getValue('custbody_payment_method_purchasing');
+
+                            var arrButtons = [
+                                {
+                                    id: 'custpage_btn_datachecked',
+                                    label: 'Data Checked',
+                                    functionName: 'dataChecked(' + JSON.stringify(objData) + ')'
                                 }
                             ]
-                            createButton(form, newRec, arrButtons)
-                            break;
+                            var displayStatus = 'PENDING ORDER(Spend Schedule Updated)'
 
-                        case 'cancelled':
-                            if (newRec.type == 'purchaserequisition') {
+                            var stTitleLabel = '<script>'
+                            stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                                'var stLabel = \'' + displayStatus + '\';' +
+                                'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                            stTitleLabel += '</script>'
 
+                            form.addField({
+                                id: 'custpage_statuslabel2',
+                                label: 'not shown - hidden`',
+                                type: serverWidget.FieldType.INLINEHTML
+                            }).defaultValue = stTitleLabel;
+
+
+                            if (isPRAdmin) {
+                                if (!objData.paymentmethod || !objData.expirydate) {
+                                    form.addPageInitMessage({
+                                        type: message.Type.WARNING,
+                                        title: 'WARNING: (For Procurement Team only. The PR Requestor and Approver can ignore this message)',
+                                        message: 'Expiry Date or Payment Method fields are empty. This PR has been approved and will proceed to the next phase (PO and Payment)'
+                                    })
+                                }
+
+                                approvalmatrix.buttons({
+                                    form: form,
+                                    newRec: newRec,
+                                    arrButtons: arrButtons
+                                });
+                            }
+
+                            form.removeButton('createpo');
+
+                            if (!isPRAdmin) {
                                 form.removeButton('edit');
-
-                                var stTitleLabel = '<script>'
-
-                                stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
-                                    'var stLabel = \'' + sStatus + '\';' +
-                                    'stStatusLabel[0].innerHTML  = stLabel.toString();';
-                                stTitleLabel += '</script>'
-
-                                form.addField({
-                                    id: 'custpage_statuslabel',
-                                    label: 'not shown - hidden',
-                                    type: serverWidget.FieldType.INLINEHTML
-                                }).defaultValue = stTitleLabel;
                             }
-                            break;
 
-                        case 'procurementreview':
 
-                            if (newRec.type == 'purchaserequisition') {
+                        }
+                        break;
 
-                                var arrButtons = [
-                                    {
-                                        id: 'custpage_btn_spendschedupdated',
-                                        label: 'Spend Schedule Updated',
-                                        functionName: 'spendScheduleUpdated'
-                                    }, {
-                                        id: 'custpage_btn_datachecked',
-                                        label: 'Data Checked',
-                                        functionName: 'dataChecked'
-                                    }
+                    case 'datachecked':
+                        if (newRec.type == 'purchaserequisition') {
 
-                                ]
+                            var arrButtons = [
+                                {
+                                    id: 'custpage_btn_spendschedupdated',
+                                    label: 'Spend Schedule Updated',
+                                    functionName: 'spendScheduleUpdated'
+                                }
+                            ]
 
-                                var displayStatus = 'PENDING ORDER(Procurement Review Needed)'
+                            var displayStatus = 'PENDING ORDER(Data Checked)'
 
-                                var stTitleLabel = '<script>'
-                                stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
-                                    'var stLabel = \'' + displayStatus + '\';' +
-                                    'stStatusLabel[0].innerHTML  = stLabel.toString();';
-                                stTitleLabel += '</script>'
+                            var stTitleLabel = '<script>'
+                            stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                                'var stLabel = \'' + displayStatus + '\';' +
+                                'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                            stTitleLabel += '</script>'
 
-                                form.addField({
-                                    id: 'custpage_statuslabel2',
-                                    label: 'not shown - hidden`',
-                                    type: serverWidget.FieldType.INLINEHTML
-                                }).defaultValue = stTitleLabel;
+                            form.addField({
+                                id: 'custpage_statuslabel2',
+                                label: 'not shown - hidden',
+                                type: serverWidget.FieldType.INLINEHTML
+                            }).defaultValue = stTitleLabel;
 
-                                if (isPRAdmin && idUser != newRec.getValue('entity')) {
-                                    createButton(form, newRec, arrButtons);
+
+                            if (isPRAdmin) {
+                                var objData = {};
+
+                                objData.expirydate = newRec.getValue('custbody_sr_expiry_date');
+                                objData.paymentmethod = newRec.getValue('custbody_payment_method_purchasing');
+
+                                if (!objData.paymentmethod || !objData.expirydate) {
+                                    form.addPageInitMessage({
+                                        type: message.Type.WARNING,
+                                        title: 'WARNING: (For Procurement Team only. The PR Requestor and Approver can ignore this message)',
+                                        message: 'Expiry Date or Payment Method fields are empty. This PR has been approved and will proceed to the next phase (PO and Payment)'
+                                    })
                                 }
 
-                                form.removeButton('createpo');
-
-                                if (idUser == newRec.getValue('entity') || !isPRAdmin /*|| pr_adminroles.indexOf(runtime.getCurrentUser().role) == -1*/) {
-                                    form.removeButton('edit');
-                                }
-
+                                approvalmatrix.buttons({
+                                    form: form,
+                                    newRec: newRec,
+                                    arrButtons: arrButtons
+                                });
                             }
-                            break;
 
-                        case 'spendscheduleupdated':
-                            if (newRec.type == 'purchaserequisition') {
+                            form.removeButton('createpo');
 
-                                var arrButtons = [
-                                    {
-                                        id: 'custpage_btn_datachecked',
-                                        label: 'Data Checked',
-                                        functionName: 'dataChecked'
-                                    }
-                                ]
-                                var displayStatus = 'PENDING ORDER(Spend Schedule Updated)'
-
-                                var stTitleLabel = '<script>'
-                                stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
-                                    'var stLabel = \'' + displayStatus + '\';' +
-                                    'stStatusLabel[0].innerHTML  = stLabel.toString();';
-                                stTitleLabel += '</script>'
-
-                                form.addField({
-                                    id: 'custpage_statuslabel2',
-                                    label: 'not shown - hidden`',
-                                    type: serverWidget.FieldType.INLINEHTML
-                                }).defaultValue = stTitleLabel;
-
-
-                                if (isPRAdmin) {
-                                    createButton(form, newRec, arrButtons);
-                                }
-
-                                form.removeButton('createpo');
-
-                                if (idUser == newRec.getValue('entity') || !isPRAdmin/*|| pr_adminroles.indexOf(runtime.getCurrentUser().role) == -1*/) {
-                                    form.removeButton('edit');
-                                }
+                            if (!isPRAdmin) {
+                                form.removeButton('edit');
                             }
-                            break;
+                        }
+                        break;
 
-                        case 'datachecked':
-                            if (newRec.type == 'purchaserequisition') {
+                    case 'pending':
 
-                                var arrButtons = [
-                                    {
-                                        id: 'custpage_btn_spendschedupdated',
-                                        label: 'Spend Schedule Updated',
-                                        functionName: 'spendScheduleUpdated'
-                                    }
-                                ]
+                        if (newRec.type == 'purchaserequisition') {
 
-                                var displayStatus = 'PENDING ORDER(Data Checked)'
-
-                                var stTitleLabel = '<script>'
-                                stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
-                                    'var stLabel = \'' + displayStatus + '\';' +
-                                    'stStatusLabel[0].innerHTML  = stLabel.toString();';
-                                stTitleLabel += '</script>'
-
-                                form.addField({
-                                    id: 'custpage_statuslabel2',
-                                    label: 'not shown - hidden',
-                                    type: serverWidget.FieldType.INLINEHTML
-                                }).defaultValue = stTitleLabel;
-
-                                if (isPRAdmin) {
-                                    createButton(form, newRec, arrButtons);
-                                }
-
-                                form.removeButton('createpo');
-
-                                if (idUser == newRec.getValue('entity') || !isPRAdmin/*|| pr_adminroles.indexOf(runtime.getCurrentUser().role) == -1*/) {
-                                    form.removeButton('edit');
-                                }
-                            }
-                            break;
-
-                        case 'pending':
-
-                            if (newRec.type == 'purchaserequisition') {
-
+                            if (isRocketeer && newRec.getValue('entity') == userId) {
                                 var arrButtons = [{
-                                    id: 'custpage_btn_submit',
+                                    id: 'custpage_btn_cancel',
                                     label: 'Cancel',
                                     functionName: 'cancel'
                                 }];
 
-                                createButton(form, newRec, arrButtons)
+                                approvalmatrix.buttons({
+                                    form: form,
+                                    newRec: newRec,
+                                    arrButtons: arrButtons
+                                });
                             }
-                            break;
 
-                        case 'approval':
+                            if (isPRAdmin) {
+                                var arrButtons = approvalmatrix.buttonApproval(newRec);
 
-                            if (newRec.type == 'purchaserequisition') {
-
-                                var arrButtons = [{
-                                    id: 'custpage_btn_approve',
-                                    label: 'Approve',
-                                    functionName: newRec.type == 'purchaserequisition' ? 'procurementReview' : 'approve'
-                                }, {
-                                    id: 'custpage_btn_reject',
-                                    label: 'Reject',
-                                    functionName: 'reject'
-                                }];
-
-                                createButton(form, newRec, arrButtons)
+                                approvalmatrix.buttons({
+                                    form: form,
+                                    newRec: newRec,
+                                    arrButtons: arrButtons
+                                });
                             }
-                            break;
+                            log.audit('pending', newRec.getValue('nextapprover'));
+                            if (newRec.getValue('nextapprover') == -1) {
+                                form.addPageInitMessage({
+                                    type: message.Type.WARNING,
+                                    title: 'WARNING:',
+                                    message: 'No one in your chain of command has sufficient spending limit to approve this transaction. Only the Procurement team will be able to Approve the Purchase Requisition.'
+                                });
+                            }
+                        }
+                        break;
 
-                        case 'approved':
+                    case 'approval':
 
-                            if (newRec.type == 'purchaserequisition') {
+                        if (newRec.type == 'purchaserequisition') {
+                            var arrButtons = approvalmatrix.buttonApproval(newRec);
 
+                            approvalmatrix.buttons({
+                                form: form,
+                                newRec: newRec,
+                                arrButtons: arrButtons
+                            });
+                            log.audit('approval', newRec.getValue('nextapprover'));
+                            if (newRec.getValue('nextapprover') == -1) {
+                                form.addPageInitMessage({
+                                    type: message.Type.WARNING,
+                                    title: 'WARNING:',
+                                    message: 'No one in your chain of command has sufficient spending limit to approve this transaction. Only the Procurement team will be able to Approve the Purchase Requisition.'
+                                });
+                            }
+                        }
+                        break;
+
+                    case 'approved':
+
+                        if (newRec.type == 'purchaserequisition') {
+                            if (newRec.getValue('status') == "Pending Order") {
                                 var displayStatus = 'PENDING ORDER(Procurement Review Done)'
 
                                 var stTitleLabel = '<script>'
@@ -278,54 +340,133 @@ define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', '../.
                                     type: serverWidget.FieldType.INLINEHTML
                                 }).defaultValue = stTitleLabel;
                             }
+                        }
+
+                        if (!isPRAdmin && !isRocketeerAccountant) {
                             form.removeButton('edit');
-                            if(!isPRAdmin){
+                            form.removeButton('custpageworkflow608');
+                            form.removeButton('createpo');
+                        }
+                        break;
 
-                                form.removeButton('custpageworkflow608');
-                                form.removeButton('createpo');
-                            }
-                            break;
+                    case 'po_pending':
 
-                        case undefined:
-                            if(!isPRAdmin) {
+                        if (newRec.type == 'purchaserequisition') {
 
-                                form.removeButton('edit');
-                            }
-                            break;
-                    }
+                            var displayStatus = 'PO: Pending Supervisor Approval'
 
-                } else if (scriptContext.type == scriptContext.UserEventType.EDIT) {
+                            var stTitleLabel = '<script>'
+                            stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                                'var stLabel = \'' + displayStatus + '\';' +
+                                'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                            stTitleLabel += '</script>'
 
-                    var sStatus = approvalmatrix.current({
-                        record: newRec.type,
-                        recordid: newRec.id
-                    });
+                            form.addField({
+                                id: 'custpage_statuslabel2',
+                                label: 'not shown - hidden',
+                                type: serverWidget.FieldType.INLINEHTML
+                            }).defaultValue = stTitleLabel;
 
-                    log.audit('sStatus', sStatus)
+                        }
 
-                    switch (sStatus) {
-                        case 'procurementreview' || 'spendscheduleupdated' || 'datachecked' || 'cancelled':
-                            /*if (idUser == newRec.getValue('entity') || pr_adminroles.indexOf(runtime.getCurrentUser().role) == -1) {
-                                var errMatrix = error.create({
-                                    name: 'RECORD_LOCKED',
-                                    message: "Record has been locked/You don't have permission to edit the record",
-                                    notifyOff: true
-                                });
-                                throw errMatrix.message;
-                            }*/
-                            break;
-
-                        case 'approved':
+                        if (!isPRAdmin) {
                             form.removeButton('edit');
-                            break;
-                    }
+                            form.removeButton('custpageworkflow608');
+                            form.removeButton('createpo');
+                        }
+                        break;
 
+                    case undefined:
+                        if (!isPRAdmin) {
+                            form.removeButton('edit');
+                        }
+
+                        var displayStatus = newRec.getText('custbody_apm_approvalstatus');
+                        if (displayStatus) {
+                            var stTitleLabel = '<script>'
+                            stTitleLabel += 'var stStatusLabel = document.getElementsByClassName(\'uir-record-status\');' +
+                                'var stLabel = \'' + displayStatus + '\';' +
+                                'stStatusLabel[0].innerHTML  = stLabel.toString();';
+                            stTitleLabel += '</script>'
+
+                            form.addField({
+                                id: 'custpage_statuslabel2',
+                                label: 'not shown - hidden`',
+                                type: serverWidget.FieldType.INLINEHTML
+                            }).defaultValue = stTitleLabel;
+                        }
+
+                        if (newRec.getValue('nextapprover') == -1) {
+                            form.addPageInitMessage({
+                                type: message.Type.WARNING,
+                                title: 'WARNING:',
+                                message: 'No one in your chain of command has sufficient spending limit to approve this transaction. Only the Procurement team will be able to Approve the Purchase Requisition.'
+                            });
+                        }
+
+                        break;
                 }
-            } catch (e) {
-                log.error('beforeLoad:', e);
+
+            } else if (scriptContext.type == scriptContext.UserEventType.EDIT) {
+
+                var sStatus = approvalmatrix.current({
+                    record: newRec.type,
+                    recordid: newRec.id
+                });
+
+                log.audit('sStatus', sStatus)
+                if (isRocketeerAccountant) {
+                    approvalmatrix.fieldDisabled(form);
+                }
+
+                switch (sStatus) {
+                    case 'procurementreview' || 'spendscheduleupdated' || 'datachecked' || 'cancelled':
+                        if (!isPRAdmin) {
+                            var errMatrix = error.create({
+                                name: 'RECORD_LOCKED',
+                                message: "Record has been locked/You don't have permission to edit the record",
+                                notifyOff: true
+                            });
+                            throw errMatrix.message;
+                        }
+                        break;
+
+                    case 'approved':
+                        form.removeButton('edit');
+                        break;
+
+                    case 'submit' || 'pending' || 'approval':
+
+                        break;
+
+                    case undefined:
+                        if (!isPRAdmin) {
+                            var errMatrix = error.create({
+                                name: 'RECORD_LOCKED',
+                                message: "Record has been locked/You don't have permission to edit the record",
+                                notifyOff: true
+                            });
+                            throw errMatrix.message;
+                        }
+
+                        break;
+                }
+
+                if (newRec.getValue('customform') == oldForm && (userRole == 1181 && (userId == shefeeque || userId == wendy))) {
+                    var fldApprovalStatus = form.getField('custbody_apm_approvalstatus');
+
+                    fldApprovalStatus.updateDisplayType({
+                        displayType: serverWidget.FieldDisplayType.NORMAL
+                    });
+                } else {
+                    var fldApprovalStatus = form.getField('custbody_apm_approvalstatus');
+
+                    fldApprovalStatus.updateDisplayType({
+                        displayType: serverWidget.FieldDisplayType.INLINE
+                    });
+                }
+
             }
-
-
         }
 
         /**
@@ -350,16 +491,70 @@ define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', '../.
          * @Since 2015.2
          */
         function afterSubmit(scriptContext) {
-
-
             var newRec = scriptContext.newRecord;
-
             if (scriptContext.type == scriptContext.UserEventType.CREATE) {
+                var userId = runtime.getCurrentUser().id;
+                var userRole = runtime.getCurrentUser().role;
 
-                approvalmatrix.initialize({
-                    record: newRec.type,
-                    recordid: newRec.id
-                });
+                var isPRAdmin = requisitionRole.indexOf(userRole) != -1;
+                var isRocketeerAccountant = accountantRole.indexOf(userRole) != -1;
+
+                if ((isPRAdmin || isRocketeerAccountant) && newRec.getValue('entity') != userId) {
+                    var objMatrix = {};
+
+                    var sSql = file.load({
+                        // id: 303650 //matrix.sql
+                        id: '../sql/matrix.sql'
+                    }).getContents();
+
+                    var custParam = {
+                        paramrecord: newRec.type,
+                    };
+
+                    var regx = new RegExp(Object.keys(custParam).join("|"), "gi");
+                    sSql = sSql.replace(regx, function (matched) {
+                        return custParam[matched];
+                    });
+
+                    var arrMatrix = query.runSuiteQL({
+                        query: sSql
+                    }).asMappedResults();
+
+
+                    if (arrMatrix.length > 0) {
+                        objMatrix = arrMatrix[0];
+                        newRec.setValue({
+                            fieldId: objMatrix.matrixfield,
+                            value: objMatrix.matrix
+                        });
+                        newRec.setValue({
+                            fieldId: objMatrix.levelfield,
+                            value: 0
+                        });
+                    }
+
+                    log.audit('rec.getValue(objMatrix.matrixfield)',newRec.getValue(objMatrix.matrixfield))
+                    approvalmatrix.submit({
+                        record: newRec.type,
+                        recordid: newRec.id,
+                        employee: newRec.getValue('entity'),
+                        matrix: newRec.getValue(objMatrix.matrixfield),
+                        amount: newRec.getValue(objMatrix.amountfield) * currency.exchangeRate({
+                            source: newRec.getValue('currency'),
+                            target: 'USD',
+                            date: new Date()
+                        })
+                    });
+                    redirect.toRecord({
+                        type: newRec.type,
+                        id: newRec.id
+                    });
+                } else {
+                    approvalmatrix.initialize({
+                        record: newRec.type,
+                        recordid: newRec.id
+                    });
+                }
 
             } else if (scriptContext.type == scriptContext.UserEventType.EDIT
                 && runtime.executionContext === runtime.ContextType.USER_INTERFACE) {

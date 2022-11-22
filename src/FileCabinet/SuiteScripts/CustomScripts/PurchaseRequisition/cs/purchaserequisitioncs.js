@@ -22,22 +22,7 @@ define(['N/ui/dialog', '../api/purchaserequisition'],
                 purchaserequesition.copyRequisition(currRecord);
             }
 
-            var stHtml = '<script>';
-            stHtml += 'jQuery( document ).ready(function() {console.log( "ready!" );';
-            stHtml += 'jQuery("#custpageworkflow601").click(function(){alert("The paragraph was clicked.");});});';
-            stHtml += '</script>';
-
-
-
-            // var options = {
-            //     title: 'Reason for Canceling PR',
-            //     message: dialogBody()
-            // };
-            //
-            // function success(result) { console.log('Success with value: ' + result) }
-            // function failure(reason) { console.log('Failure: ' + reason) }
-            //
-            // dialog.create(options).then(success).catch(failure);
+            purchaserequesition.disabledSublistField(currRecord);
         }
 
         /**
@@ -56,9 +41,7 @@ define(['N/ui/dialog', '../api/purchaserequisition'],
             var currRecord = scriptContext.currentRecord;
 
             if (scriptContext.fieldId == 'item') {
-                var sublistName = currRecord.getSublist({sublistId: "item"});
-                var colEstimatedAmount = sublistName.getColumn({fieldId: "estimatedamount"});
-                colEstimatedAmount.isDisabled = true;
+                purchaserequesition.disabledSublistField(currRecord);
             }
         }
 
@@ -99,9 +82,7 @@ define(['N/ui/dialog', '../api/purchaserequisition'],
          * @since 2015.2
          */
         function lineInit(scriptContext) {
-            var currRecord = scriptContext.currentRecord;
 
-            purchaserequesition.disabledSublistField(currRecord);
         }
 
         /**
@@ -136,17 +117,7 @@ define(['N/ui/dialog', '../api/purchaserequisition'],
         function validateLine(scriptContext) {
             var currRecord = scriptContext.currentRecord;
 
-            var inEstimatedRate = currRecord.getCurrentSublistValue({
-                sublistId: 'item',
-                fieldId: 'estimatedrate'
-            });
-
-            if (inEstimatedRate == 0) {
-                alert("Please input a value in Estimated Rate.")
-                return false;
-            } else {
-                return true;
-            }
+            return purchaserequesition.mandatorySublistField(currRecord);
         }
 
         /**
@@ -189,28 +160,7 @@ define(['N/ui/dialog', '../api/purchaserequisition'],
          * @since 2015.2
          */
         function saveRecord(scriptContext) {
-            var options = {
-                title: 'Reason for Canceling PR',
-                message: dialogBody()
-            };
 
-            function success(result) { console.log('Success with value: ' + result) }
-            function failure(reason) { console.log('Failure: ' + reason) }
-
-            dialog.create(options).then(success).catch(failure);
-        }
-
-        function dialogBody() {
-            var stHtml = '<table><tr><td><div>';
-            stHtml += '<p>Reason: <textarea rows="4" cols="45">\n </textarea></p>'
-            stHtml += '</div></td></tr></table>';
-            stHtml += '<table><tr><td>';
-            stHtml += '<div class="uir-message-buttons"><button value="shadow-1" onclick="submitOK(true)">Ok</button></div></td>';
-            stHtml += '<td><div class="uir-message-buttons"><button value="shadow-2" onclick="submitCancel(false)">Cancel</button></div></td></tr></table>';
-            stHtml += '<script>';
-            stHtml += '</script>';
-
-            return stHtml;
         }
 
         return {
@@ -218,7 +168,7 @@ define(['N/ui/dialog', '../api/purchaserequisition'],
             fieldChanged: fieldChanged,
             // postSourcing: postSourcing,
             // sublistChanged: sublistChanged,
-            lineInit: lineInit,
+            // lineInit: lineInit,
             // validateField: validateField,
             validateLine: validateLine,
             // validateInsert: validateInsert,

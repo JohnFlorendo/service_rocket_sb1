@@ -3,9 +3,9 @@
  * @NScriptType MapReduceScript
  * @NModuleScope SameAccount
  */
-define(['../api/netspot', '../../Company/api/company'],
+define(['../api/netspot', '../../Library/momentjs/moment'],
 
-function(netspot, company) {
+function(netspot, moment) {
    
     /**
      * Marks the beginning of the Map/Reduce process and generates input data.
@@ -20,19 +20,47 @@ function(netspot, company) {
 	getInputData = function () {
     	
 		var arrInput = [];
-    	var objCompanies = netspot.searchCompany({});
+        var objCompanies = netspot.searchCompany({
+            request: {
+                "filterGroups": [{
+                    "filters": [{
+                        "propertyName": "createdate",
+                        "operator": "GTE",
+                        "value": (moment().subtract(1, 'days')).valueOf()
+                    }],
+                    "filters": [{
+                        "propertyName": "hs_lastmodifieddate",
+                        "operator": "GTE",
+                        "value": (moment().subtract(1, 'days')).valueOf()
+                    }]
+                }],
+                "sorts": [
+                    "hs_object_id"
+                ],
+                "properties": [
+                    "name",
+                    "nsid",
+                    "domain"
+                ],
+                limit: 100,
+                after: 0
+            }
+        });
     	
-    	if(objCompanies.result.status == 'SUCCESS'){
-    		arrInput = objCompanies.result.data;
+    	if(objCompanies.response.status == 'SUCCESS'){
+    		arrInput = objCompanies.response.data;
     	}
-    	
+        else if (objCompanies.response.data.length > 0){
+            arrInput = objCompanies.response.data;
+        }
+        
         for (var index in arrInput) {
         	arrInput[index].key = arrInput[index].id;
         }
     	
         log.audit({
             title: 'getInputData',
-            details: 'arrInput: ' + arrInput.length
+            details: 'Number of Companies: ' + arrInput.length
         });
         
     	return arrInput;
@@ -68,7 +96,7 @@ function(netspot, company) {
         var objContext = JSON.parse(context.values[0]);
         var reduceData = objContext;
         
-        var id = company.createHsCompany(reduceData);
+        var id = netspot.createHsCompany(reduceData);
         
     };
 

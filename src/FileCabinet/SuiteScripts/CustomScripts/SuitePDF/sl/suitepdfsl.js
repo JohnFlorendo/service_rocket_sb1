@@ -3,9 +3,18 @@
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/file', 'N/redirect', 'N/task', '../api/estimate', '../api/estimatetest', '../api/invoice', '../api/letter', '../api/lib/promotionletter', '../api/listpdf'],
+define(['N/record', 'N/file', 'N/redirect', 'N/task', 'N/runtime'
+	, '../../MyServiceRocket/api/myservicerocket'
+	, '../api/estimate'
+	, '../api/invoice'
+	, '../api/letter'
+	, '../api/lib/promotionletter'
+	, '../api/listpdf'
+	,'../api/jobdescription'
+	, '../api/lib/scopingdoc'
+],
 
-function(record, file, redirect, task, estimate, estimatetest, invoice, letter, promotionletter, listpdf) {
+function(record, file, redirect, task, runtime, myservicerocket, estimate, invoice, letter, promotionletter, listpdf, jobdesc, scopingdoc) {
    
     /**
      * Definition of the Suitelet script trigger point.
@@ -20,6 +29,7 @@ function(record, file, redirect, task, estimate, estimatetest, invoice, letter, 
     function onRequest(context) {
     	
      	var paramReq = context.request.parameters;
+		var idMe = runtime.getCurrentUser().id;
     	var idRec = paramReq.id;
     	var sType = paramReq.type;
     	var sPdfTemplate = '';
@@ -30,19 +40,6 @@ function(record, file, redirect, task, estimate, estimatetest, invoice, letter, 
 										id: idRec, 
 										isDynamic: true});
     		sPdfTemplate = estimate.generate(recPrint);
-    		
-    		context.response.setHeader({
-          		name: 'Content-disposition',
-          		value: 'filename="' + recPrint.getValue({fieldId: 'tranid'}) + '_'+  recPrint.getValue({fieldId: 'custbody_atl_quote_number'}) + '.pdf"',
-        	});
-    		context.response.renderPdf(sPdfTemplate);
-    	}
-    	else if(sType == 'estimatetest'){
-    		
-    		recPrint = record.load({	type: 'estimate', 
-										id: idRec, 
-										isDynamic: true});
-    		sPdfTemplate = estimatetest.generate(recPrint);
     		
     		context.response.setHeader({
           		name: 'Content-disposition',
@@ -125,39 +122,48 @@ function(record, file, redirect, task, estimate, estimatetest, invoice, letter, 
     	}
     	else if(sType == 'termsconditions'){
     		
-			var objFile = letter.generateTermsCondition({id: idRec});
-			
-			context.response.setHeader({
-			name: 'Content-disposition',
-			value: 'filename='+objFile.name+'.pdf',
+    		
+			var hasPermission = myservicerocket.hasMyAppsPermission({
+				custparam: {
+					paramuser: idMe,
+					paramapps: 'peopleletter'
+				}
 			});
-			
-			sPdfTemplate = objFile.file;
-			context.response.renderPdf(sPdfTemplate); 
+
+			if (hasPermission) {
+    			
+    			var objFile = letter.generateTermsCondition({id: idRec});
+    			
+    			context.response.setHeader({
+    				name: 'Content-disposition',
+    				value: 'filename=ServiceRocketT&C.pdf',
+    			});
+    			
+    			sPdfTemplate = objFile.file;
+    			context.response.renderPdf(sPdfTemplate); 
+    		}
     	}
     	else if(sType == 'offerletter'){
     		
-			var objFile = letter.generateOffer({id: idRec});
-			
-			context.response.setHeader({
-			name: 'Content-disposition',
-			value: 'filename='+objFile.name+'.pdf',
+			var hasPermission = myservicerocket.hasMyAppsPermission({
+				custparam: {
+					paramuser: idMe,
+					paramapps: 'peopleletter'
+				}
 			});
-			
-			sPdfTemplate = objFile.file;
-			context.response.renderPdf(sPdfTemplate); 
-    	}
-    	else if(sType == 'offerletter'){
-    		
-			var objFile = letter.generateOffer({id: idRec});
-			
-			context.response.setHeader({
-			name: 'Content-disposition',
-			value: 'filename='+objFile.name+'.pdf',
-			});
-			
-			sPdfTemplate = objFile.file;
-			context.response.renderPdf(sPdfTemplate); 
+
+			if (hasPermission) {
+    			 
+				var objFile = letter.generateOffer({id: idRec});
+				
+				context.response.setHeader({
+				name: 'Content-disposition',
+				value: 'filename='+objFile.name+'.pdf',
+				});
+				
+				sPdfTemplate = objFile.file;
+				context.response.renderPdf(sPdfTemplate); 
+    		 }
     	}
     	else if(sType == 'subsidiaryallowance'){
     		
@@ -174,14 +180,38 @@ function(record, file, redirect, task, estimate, estimatetest, invoice, letter, 
     	else if(sType == 'allowancetable'){
     		
 			var sPdfTemplate = listpdf.generateAllowanceTable();
-			
-			
 			context.response.renderPdf(sPdfTemplate); 
     	}
-		
-		//}	
-		
-		//context.response.write(JSON.stringify(objRecSub));
+      	else if(sType == 'jobdescription'){
+			try{
+			context.response.writeFile({
+				file : jobdesc.generate({jobid:idRec}),
+				isInline : true
+			});
+			}catch(e){
+			log.debug('Error creating job description PDF', e)
+			}
+      	}
+		else if(sType == 'scopingdoc'){
+
+			var objFile = scopingdoc.generatePDF({id: idRec});
+	
+			context.response.setHeader({
+			name: 'Content-disposition',
+			value: 'filename='+objFile.name+'.pdf',
+			});
+			
+			sPdfTemplate = objFile.content;
+			context.response.renderPdf(sPdfTemplate); 
+
+      	}
+		else if(sType == 'scopingdocganttchart'){
+
+			var objFile = scopingdoc.generateGanttChart({id: idRec});
+			sPdfTemplate = objFile.content;
+			context.response.write(sPdfTemplate);
+
+      	}
     }
 
     return {

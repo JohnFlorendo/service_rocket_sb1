@@ -37,20 +37,39 @@ function(record, search,libHelper) {
                 type : record.Type.SALES_ORDER,
                 id : salesOrderId
             });
-            var stJob = recSalesOrder.getValue('job');
-            var objInvoiceSummary = fn.invoiceSummaryResults(salesOrderId,stJob);
-            log.debug('objInvoiceSummary',objInvoiceSummary);
-            //UPDATE RECORD
+            var objAmount = fn.invoiceSummaryFieldsComputation(recSalesOrder);
+            log.debug('objAmount',objAmount);
             record.submitFields({
                 type : record.Type.SALES_ORDER,
                 id : salesOrderId,
                 values : {
-                    custbody_sr_amount_invoiced : (objInvoiceSummary.amountInvoice) ? objInvoiceSummary.amountInvoice : 0,
-                    custbody_sr_tax_amount : (objInvoiceSummary.amountTax) ? objInvoiceSummary.amountTax : 0,
-                    custbody_sr_amount_before_gst : (objInvoiceSummary.amountBeforeGST) ? objInvoiceSummary.amountBeforeGST : 0,
-                    custbody_sr_amount_remaining : (objInvoiceSummary.amountRemaining) ? objInvoiceSummary.amountRemaining : 0
+                    custbody_sr_so_amount_before_tax: (objAmount.inAmountSO) ? objAmount.inAmountSO : 0,
+                    custbody_sr_so_tax_amount: (objAmount.inTaxAmountSO) ? objAmount.inTaxAmountSO : 0,
+                    custbody_sr_invoiced_amount_before_tax: objAmount.inAmountInv,
+                    custbody_sr_invoiced_tax_amount: objAmount.inTaxAmountInv,
+                    custbody_sr_remaining_amount: objAmount.inAmountSO - objAmount.inAmountInv,
+                    custbody_sr_remaining_tax_amount: objAmount.inTaxAmountSO - objAmount.inTaxAmountInv,
+
+                    custbody_sr_total_amt_so: objAmount.inAmountSO + objAmount.inTaxAmountSO,
+                    custbody_sr_total_amt_inv: objAmount.inAmountInv + objAmount.inTaxAmountInv,
+                    custbody_sr_total_amt_remaining: (objAmount.inAmountSO - objAmount.inAmountInv) + (objAmount.inTaxAmountSO - objAmount.inTaxAmountInv)
                 }
             });
+            log.debug('Updated', recSalesOrder.id);
+            // var stJob = recSalesOrder.getValue('job');
+            // var objInvoiceSummary = fn.invoiceSummaryResults(salesOrderId,stJob);
+            // log.debug('objInvoiceSummary',objInvoiceSummary);
+            // //UPDATE RECORD
+            // record.submitFields({
+            //     type : record.Type.SALES_ORDER,
+            //     id : salesOrderId,
+            //     values : {
+            //         custbody_sr_amount_invoiced : (objInvoiceSummary.amountInvoice) ? objInvoiceSummary.amountInvoice : 0,
+            //         custbody_sr_tax_amount : (objInvoiceSummary.amountTax) ? objInvoiceSummary.amountTax : 0,
+            //         custbody_sr_amount_before_gst : (objInvoiceSummary.amountBeforeGST) ? objInvoiceSummary.amountBeforeGST : 0,
+            //         custbody_sr_amount_remaining : (objInvoiceSummary.amountRemaining) ? objInvoiceSummary.amountRemaining : 0
+            //     }
+            // });
         } catch (e) {
             log.debug('error : updateInvoiceSummaryFields', e);
         }
@@ -313,6 +332,117 @@ function(record, search,libHelper) {
     }
 
 
+    fn.invoiceSummaryFieldsComputation = function(newRecord) {
+        var inAmountInv = 0;
+        var inTaxAmountInv = 0;
+        var inProjectId = newRecord.getValue({
+            fieldId: 'job'
+        });
+        var inAmountSO = newRecord.getValue({
+            fieldId: 'subtotal'
+        });
+        var inTaxAmountSO = newRecord.getValue({
+            fieldId: 'taxtotal'
+        });
+        var objInvoices = getInvoiceRecordBySalesOrder(newRecord.id);
+
+        if (inProjectId == '') {
+            log.debug('objInvoices if', objInvoices);
+            for (var indx in objInvoices) {
+                inAmountInv += objInvoices[indx].inAmount;
+                // if (objInvoices[indx].inAmount) {
+                //     inAmountInv = objInvoices[indx].inAmount
+                // }
+                inTaxAmountInv += objInvoices[indx].inTaxAmount;
+                // if (objInvoices[indx].inTaxAmount) {
+                //     inTaxAmountInv = objInvoices[indx].inTaxAmount
+                // }
+            }
+        } else {
+            log.debug('objInvoices else', objInvoices);
+            for (var indx in objInvoices) {
+                inAmountInv += objInvoices[indx].inAmount;
+                // if (objInvoices[indx].inAmount) {
+                //     inAmountInv = objInvoices[indx].inAmount
+                // }
+                inTaxAmountInv += objInvoices[indx].inTaxAmount;
+                // if (objInvoices[indx].inTaxAmount) {
+                //     inTaxAmountInv = objInvoices[indx].inTaxAmount
+                // }
+            }
+
+            var objStandAloneInvoices = getStandAloneInvoiceRecord(inProjectId);
+            log.debug('objStandAloneInvoices', objStandAloneInvoices);
+            for (var indx in objStandAloneInvoices) {
+                inAmountInv += objStandAloneInvoices[indx].inAmount;
+                // if (objStandAloneInvoices[indx].inAmount) {
+                //     inAmountInv = objStandAloneInvoices[indx].inAmount
+                // }
+                inTaxAmountInv += objStandAloneInvoices[indx].inTaxAmount;
+                // if (objStandAloneInvoices[indx].inTaxAmount) {
+                //     inTaxAmountInv = objStandAloneInvoices[indx].inTaxAmount
+                // }
+            }
+        }
+
+        return {
+            inAmountInv: inAmountInv,
+            inTaxAmountInv: inTaxAmountInv,
+            inAmountSO: inAmountSO,
+            inTaxAmountSO: inTaxAmountSO
+        }
+    }
+
+    function getInvoiceRecordBySalesOrder(inSalesOrdeId) {
+        var objInvoices = {};
+
+        var invoiceSearchObj = search.load({id: 'customsearch_sr_so_with_invoices'});
+        var filters = invoiceSearchObj.filters;
+        filters.push({name: "createdfrom", operator: "anyof", values: inSalesOrdeId.toString()});
+        invoiceSearchObj.filters = [];
+        invoiceSearchObj.filters = filters;
+
+        var searchResultCount = invoiceSearchObj.runPaged().count;
+
+        if (searchResultCount != 0) {
+            invoiceSearchObj.run().each(function (result) {
+                if (objInvoices[result.id] == null) {
+                    objInvoices[result.getValue({name: 'internalid', summary: 'GROUP'})] = {
+                        inAmount: Number(result.getValue({name: 'amount', summary: 'SUM'})),
+                        inTaxAmount: Number(result.getValue({name: 'taxamount', summary: 'SUM'}))
+                    };
+                }
+                return true;
+            });
+        }
+
+        return objInvoices;
+    }
+
+    function getStandAloneInvoiceRecord(inProjectId) {
+        var objInvoices = {};
+        log.debug('inProjectId', inProjectId);
+        var invoiceSearchObj = search.load({id: 'customsearch_sr_stand_alone_invoices'});
+        var filters = invoiceSearchObj.filters;
+        filters.push({name: "internalid", join: 'jobmain', operator: "anyof", values: inProjectId.toString()});
+        invoiceSearchObj.filters = [];
+        invoiceSearchObj.filters = filters;
+
+        var searchResultCount = invoiceSearchObj.runPaged().count;
+        if (searchResultCount != 0) {
+            invoiceSearchObj.run().each(function (result) {
+                if (objInvoices[result.id] == null) {
+                    objInvoices[result.getValue({name: 'internalid', summary: 'GROUP'})] = {
+                        inAmount: Number(result.getValue({name: 'amount', summary: 'SUM'})),
+                        inTaxAmount: Number(result.getValue({name: 'taxamount', summary: 'SUM'}))
+                    };
+                }
+                return true;
+            });
+        }
+
+        return objInvoices;
+    }
 
     return fn;
     

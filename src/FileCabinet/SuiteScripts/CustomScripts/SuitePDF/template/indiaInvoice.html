@@ -212,8 +212,8 @@
                 <th width="10%">
                     <table style="width:100%;">
                         <tr>
-                                <td align="right">{{@root.custbody_unittype}}</td>
-<!--                            <td align="right">Qty</td>-->
+                            <td align="right">{{@root.custbody_unittype}}</td>
+                            <!--                            <td align="right">Qty</td>-->
                         </tr>
                     </table>
                 </th>
@@ -258,10 +258,14 @@
                     {{no}}
                 </td>
                 <td>
-                    <p style="text-align: left">{{{description}}}</p>
+                    <p style="text-align: left">
+                        {{#each arrLineDescription}}
+                    <p style="padding:0px; margin:0px;">{{{this}}}</p>
+                    {{/each}}
+                    </p>
                 </td>
                 <td align="right" valign="middle">{{quantity}}</td>
-<!--                <td align="right" valign="middle">{{rate}}</td>-->
+                <!--                <td align="right" valign="middle">{{rate}}</td>-->
                 <td align="right" valign="middle">{{amount}}</td>
                 <td align="right" valign="middle">{{tax1amt}}</td>
                 {{#if @root.haslinediscount}}
@@ -279,7 +283,7 @@
                 </td>
                 {{else}}
                 {{/if}}
-<!--                <td align="right" valign="middle">{{amount}}</td>-->
+                <!--                <td align="right" valign="middle">{{amount}}</td>-->
                 <td align="right" valign="middle">{{grossamt}}</td>
             </tr>
             {{else}}
@@ -295,7 +299,7 @@
                     <table width="100%" style="padding-bottom: -10px;">
                         <tr>
                             <td class="summarybox">Sub-total</td>
-<!--                            <td class="summarybox" align="right">{{currencysymbol}} {{subtotal}}</td>-->
+                            <!--                            <td class="summarybox" align="right">{{currencysymbol}} {{subtotal}}</td>-->
                             <td class="summarybox" align="right">{{changedTotal}}</td>
                         </tr>
                         {{#if hasrdiscount}}
@@ -317,7 +321,7 @@
                         {{#if hastax}}
                         <tr>
                             <td>{{taxcode}}</td>
-<!--                            <td align="right">{{currencysymbol}} {{taxtotal}}</td>-->
+                            <!--                            <td align="right">{{currencysymbol}} {{taxtotal}}</td>-->
                             <td align="right">{{taxtotal}}</td>
                         </tr>
                         {{else}}

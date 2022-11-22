@@ -53,22 +53,38 @@ function(record, file, query, currency, employeetree) {
 	};
 
 	nextManager = function(option){
+		var arrManagers = [];
 		
 		var sSql = file.load({
-			id: 303949//'../../sql/approvermanager.sql'
+			id: '../../sql/approvermanager.sql'
 		}).getContents();
-		
-		var arrManagers = employeetree.getManagers({
+
+
+
+		var arrResults = employeetree.getManagers({
 			id: option.employee
 		});
-		
+
+		for (var indx = 0; indx < arrResults.length; indx++){
+			var element = arrResults[indx];
+			if (element != null) {
+				arrManagers.push(element);
+			}
+		}
+
+		log.audit('arrManagers',arrManagers)
+		if(arrManagers.length<1){
+			return undefined;
+		}
+
+		log.audit('nextManager option',option)
     	var custParam = {
     		parammatrix: option.matrix, 
     		paramrecord: option.record,
     		paramapprovers: arrManagers,
 			paramamount: option.amount
     	};
-    	
+
     	var regx = new RegExp(Object.keys(custParam).join("|"),"gi");
         sSql = sSql.replace(regx, function(matched){
   		  return custParam[matched];
@@ -77,6 +93,7 @@ function(record, file, query, currency, employeetree) {
     	var arrMatrix = query.runSuiteQL({
 			query: sSql
 		}).asMappedResults();
+    	log.audit('arrMatrix', arrMatrix);
     	
     	if(arrMatrix.length > 0){
     		var objMatrix = arrMatrix[0];
@@ -87,7 +104,7 @@ function(record, file, query, currency, employeetree) {
 	checkApprover = function(option){
 		
 		var sSql = file.load({
-			id: 303949//'../../sql/approvermanager.sql'
+			id: '../../sql/approvermanager.sql'
 		}).getContents();
 		
 		var arrManagers = employeetree.getManagers({

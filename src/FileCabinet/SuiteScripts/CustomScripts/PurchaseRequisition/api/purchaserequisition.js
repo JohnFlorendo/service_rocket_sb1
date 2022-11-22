@@ -28,7 +28,7 @@ define(['N/runtime', '../../SuiteBox/api/suitebox', './lib/requisition'],
         }
 
         copyRequisition = function (currRecord) {
-            return requisition.setSpendScheduleFields(currRecord);
+            return requisition.resetValue(currRecord);
         }
 
         disabledSublistField = function (currRecord) {
@@ -39,11 +39,16 @@ define(['N/runtime', '../../SuiteBox/api/suitebox', './lib/requisition'],
             return requisition.gstAmountField(newRec);
         }
 
+        mandatorySublistField = function (currRecord) {
+            return requisition.estimatedRateMandatory(currRecord)
+        }
+
         return {
             createFolder: createFolder,
             copyRequisition: copyRequisition,
             disabledSublistField: disabledSublistField,
-            setGSTAmountField: setGSTAmountField
+            setGSTAmountField: setGSTAmountField,
+            mandatorySublistField: mandatorySublistField
         };
 
     });

@@ -33,7 +33,11 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 
 		create = function (option) {
 
-				var retMe = option;
+				var retMe = {
+					status: '',
+					request: option
+				};
+				
 				option.action = 'create';
 
 				try {
@@ -55,26 +59,12 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 						var dDate = new Date();
 
 						var objBody = JSON.parse(resp.body);
-
-						retMe.result = {
-							status: 'SUCCESS',
+						retMe.status = 'SUCCESS';
+						retMe.response = {
 							id: objBody.id,
+							lastupdate: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString(),
 							message: 'Hubpsot Deal Created ' + (new Date()).toString()
 						};
-
-						retMe.record.setValue({
-							fieldId: 'custbody_nshs_logs',
-							value: retMe.result.message
-						});
-						retMe.record.setValue({
-							fieldId: 'custbody_hubspot_id',
-							value: objBody.id
-						});
-
-						retMe.record.setValue({
-							fieldId: 'custbody_hubspot_hs_lastmodifieddate',
-							value: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString()
-						});
 					}
 					else {
 
@@ -88,37 +78,21 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 							var e = err;
 							objBody.message = resp.body;
 						}
-
-						retMe.result = {
-							status: 'FAILED',
+						
+						retMe.status = 'FAILED';
+						retMe.response = {
 							message: resp.code + ': ' + objBody.message
 						};
-
-						retMe.record.setValue({
-							fieldId: 'custbody_nshs_logs',
-							value: retMe.result.status + ': ' + retMe.result.message
-						});
 					}
 				}
 
 				catch (err) {
 
-					retMe.result = {
-						status: 'FAILED',
-						message: err
+					retMe.status = 'FAILED';
+					retMe.response = {
+						message : 'ERROR: ' + err
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.status + ': ' + retMe.result.message
-					});
-
 				}
-
-				log.audit({
-					title: 'deal create' + retMe.record.id,
-					details: 'request: ' + JSON.stringify(objPayload) + ' response: ' + JSON.stringify(retMe.result)
-				});
 
 				return retMe;
 			};
@@ -145,24 +119,11 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 						var dDate = new Date();
 
 						var objBody = JSON.parse(resp.body);
-
-						retMe.result = {
-							rawresponse: objBody,
-							status: 'SUCCESS',
-							id: objBody.id,
-							message: 'Hubspot Deal Associated ' + (new Date()).toString(),
-							hs_lastmodifieddate: objBody.properties.hs_lastmodifieddate
+						retMe.status = 'SUCCESS';
+						retMe.response = {
+							lastupdate: objBody.properties.hs_lastmodifieddate,
+							message: 'Hubspot Deal Associated ' + (new Date()).toString()
 						};
-
-						retMe.record.setValue({
-							fieldId: 'custbody_nshs_logs',
-							value: retMe.result.message
-						});
-
-						retMe.record.setValue({
-							fieldId: 'custbody_hubspot_hs_lastmodifieddate',
-							value: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString()
-						});
 					}
 					else {
 
@@ -176,31 +137,18 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 							var e = err;
 							objBody.message = resp.body;
 						}
-
-						retMe.result = {
-							rawresponse: objBody,
-							status: 'FAILED',
+						retMe.status = 'FAILED';
+						retMe.response = {
 							message: resp.code + ': ' + objBody.message
 						};
-
-						retMe.record.setValue({
-							fieldId: 'custbody_nshs_logs',
-							value: retMe.result.status + ': ' + retMe.result.message
-						});
-
 					}
 				}
 				catch (err) {
 
-					retMe.result = {
-						status: 'FAILED',
-						message: err
+					retMe.status = 'FAILED';
+					retMe.response = {
+						message : 'ERROR: ' + err
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.status + ': ' + retMe.result.message
-					});
 				}
 
 				return retMe;
@@ -208,7 +156,11 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 
 		update = function (option) {
 
-				var retMe = option;
+				var retMe = {
+					status: '',
+					request: option
+				};
+				
 				option.action = 'update';
 
 				try {
@@ -232,23 +184,13 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 
 						var objBody = JSON.parse(resp.body).results[0];
 
-						retMe.result = {
-							rawresponse: objBody,
-							status: 'SUCCESS',
+						retMe.status = 'SUCCESS';
+						
+						retMe.response = {
 							id: objBody.id,
-							message: 'Hubpsot Deal Updated ' + (new Date()).toString(),
-							hs_lastmodifieddate: objBody.properties.hs_lastmodifieddate
+							lastupdate: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString(),
+							message: 'Hubpsot Deal Updated ' + (new Date()).toString()
 						};
-
-						retMe.record.setValue({
-							fieldId: 'custbody_nshs_logs',
-							value: retMe.result.message
-						});
-
-						retMe.record.setValue({
-							fieldId: 'custbody_hubspot_hs_lastmodifieddate',
-							value: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString()
-						});
 					}
 					else {
 
@@ -263,50 +205,44 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 							objBody.message = resp.body;
 						}
 
-						retMe.result = {
-							rawresponse: objBody,
-							status: 'FAILED',
+						retMe.status = 'FAILED';
+						retMe.response = {
 							message: resp.code + ': ' + objBody.message
 						};
-
-						retMe.record.setValue({
-							fieldId: 'custbody_nshs_logs',
-							value: retMe.result.status + ': ' + retMe.result.message
-						});
 					}
 				}
 
 				catch (err) {
 
-					retMe.result = {
-						status: 'FAILED',
-						message: err
+					retMe.status = 'FAILED';
+					retMe.response = {
+						message: 'ERROR: ' + err
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.status + ': ' + retMe.result.message
-					});
-
 				}
-
-				log.audit({
-					title: 'deal update' + retMe.record.id,
-					details: 'request: ' + JSON.stringify(objPayload) + ' response: ' + JSON.stringify(retMe.result)
-				});
 
 				return retMe;
 			};
 
 		get = function(option){
 			
-			var retMe = option;
+			var retMe = {
+				request: option
+			};
 
 			try {
 
+				var sProperties = '';
+				
+				if(option.properties.length > 0){
+					sProperties = ((option.properties.map(function(a){
+						return '&properties='+a;
+					})).toString()).replace(/,/g,'');
+				}
+				
+				
 				var resp = https.get({
 					url: "https://api.hubapi.com/crm/v3/objects/deals/"
-						+ option.id + "?associations=company&archived=false&hapikey={custsecret_hubspot_apikey}",
+						+ option.id + "?associations=company&archived=false&hapikey={custsecret_hubspot_apikey}" + sProperties,
 					headers: {
 						'Content-Type' : 'application/json',
 						'Accept': '*/*'
@@ -317,11 +253,16 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 				if (resp.code == 200 || resp.code == 201) {
 
 					var dDate = new Date();
-
 					var objBody = JSON.parse(resp.body);
 
+					retMe.status = 'SUCCESS';
+					
 					retMe.result = {
 						status: 'SUCCESS',
+						data: objBody,
+					};
+					
+					retMe.response = {
 						data: objBody,
 					};
 				}
@@ -338,16 +279,28 @@ define(['N/https', 'N/record', '../../../Helper/nsmapjson', '../../../Library/mo
 						objBody.message = resp.body;
 					}
 
+					retMe.status = 'FAILED';
+					
 					retMe.result = {
 						status: 'FAILED',
+						message: resp.code + ': ' + objBody.message
+					};
+					
+					retMe.response = {
 						message: resp.code + ': ' + objBody.message
 					};
 				}
 			}
 			catch (err) {
 
+				retMe.status = 'FAILED';
+				
 				retMe.result = {
 					status: 'FAILED',
+					message: err
+				};
+				
+				retMe.response = {
 					message: err
 				};
 			}

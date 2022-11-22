@@ -22,11 +22,12 @@ define(['N/runtime', 'N/record', 'N/search', 'N/file', '../../../Library/handleb
 
         var objRecPrint = nstojson.get(recPrint);
         var objRecSub = nstojson.get(recSub);
-        	objRecSub.billingschedule = '';
+        	// objRecSub.billingschedule = '';
 
         for (var attrname in objRecPrint) {
             objRecSub[attrname] = objRecPrint[attrname];
         }
+        objRecSub.billingschedule = recPrint.getText('billingschedule');
         
         if(recPrint.getValue('job')){
         	

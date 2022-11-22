@@ -2,7 +2,7 @@ define(['N/query','N/file'],
 
     function (query,file) {
 
-        const pr_adminroles = [3,50,8,41, 1179, 1180, 1181,1349, 1017, 1187, 1336, 1330, 1178, 1305, 1324, 1331, 1334, /*1326*/,1327,19];
+        const pr_adminroles = [1181,1349];//Requisition role
 
         var approvalMatrix = {};
 

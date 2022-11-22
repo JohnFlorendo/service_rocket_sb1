@@ -1,6 +1,6 @@
-define(['N/runtime', 'N/search', 'N/file', 'N/ui/serverWidget', '../../Library/handlebars', '../../SuiteBox/api/suitebox'],
+define(['N/runtime', 'N/search', 'N/file', './lib/nps', '../../Library/handlebars', '../../SuiteBox/api/suitebox', './lib/template'],
 
-function(runtime, search, file, serverWidget, handlebars, suitebox) {
+function(runtime, search, file, nps, handlebars, suitebox, template) {
    
 	getLatestRAG = function(scriptContext) {
 		
@@ -26,10 +26,6 @@ function(runtime, search, file, serverWidget, handlebars, suitebox) {
 	    	objJson.date = results[0].getValue({name: 'custrecord_rgs_date'});
 	    	objJson.notes = results[0].getValue({name: 'custrecord_rgs_notes'});
 	    	
-//		    var form = scriptContext.form;
-//	    	var fldRAG = form.addField({	id : 'custpage_rag_info',
-//	    									type : serverWidget.FieldType.INLINEHTML,
-//	    									label : 'RAG Status'});
 	    	
 	    	var sTemplate = file.load(105741); 
 	    	var sHandlebar = handlebars.compile(sTemplate.getContents());
@@ -93,20 +89,50 @@ function(runtime, search, file, serverWidget, handlebars, suitebox) {
 	//***
 	
 	updateHours = function(newRec){
-		
-		newRec.setValue({	fieldId: 'custentity_billable_hours', 
-			value : recJob.getValue({fieldId: 'custentity_sf_billable_hours'}) || 0 });
-		newRec.setValue({	fieldId: 'custentity_nonbillable_hours', 
-					value : recJob.getValue({fieldId: 'custentity_sf_nonbillable_hours'}) || 0});
-		
+		log.audit('Update Hours');
+		newRec.setValue({	fieldId: 'custentity_billable_hours',
+			value : newRec.getValue({fieldId: 'custentity_sf_billable_hours'}) || 0 });
+			// value : 0 });
+		newRec.setValue({	fieldId: 'custentity_nonbillable_hours',
+					value : newRec.getValue({fieldId: 'custentity_sf_nonbillable_hours'}) || 0});
+
 		return newRec;
 		
 	};
 	
+	sendNPS = function(option){
+		
+		return nps.send(option);
+	};
+	
+	checkNPSContact = function(option){
+		
+		return nps.checkContacts(option);
+	};
+
+	setTemplate = function(option) {
+		return template.set(option)
+	}
+
+	setTemplateListBeforeLoad = function(option) {
+		return template.setListBeforeLoad(option)
+	}
+
+	setTemplateListOnFieldChange = function(option) {
+		return template.setListOnFieldChange(option)
+	}
+	
+	
     return {
     	getLatestRAG: getLatestRAG,
     	createFolder: createFolder,
-    	copyParentFolder: copyParentFolder
+    	copyParentFolder: copyParentFolder,
+    	updateHours : updateHours ,
+    	checkNPSContact: checkNPSContact,
+    	sendNPS: sendNPS,
+		setTemplate: setTemplate,
+		setTemplateListBeforeLoad: setTemplateListBeforeLoad,
+		setTemplateListOnFieldChange: setTemplateListOnFieldChange
     };
     
 });

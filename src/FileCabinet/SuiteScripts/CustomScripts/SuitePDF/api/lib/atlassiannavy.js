@@ -157,6 +157,19 @@ function(record, search, file, helper, handlebars, nstojson) {
 				
 				objRecSub.item[idLastItem].discountdetail.push(objDiscount);
 				objRecSub.srdiscount += objRecSub.item[nLine1].amount_id;
+			} else {
+
+				idLastDiscount = 0;
+
+				objRecSub.itemcount++;
+				objRecSub.item[nLine1].no = objRecSub.itemcount;
+				objRecSub.item[nLine1].displayonpdf = true;
+				objRecSub.item[nLine1].upgradecredit_id = 0;
+				objRecSub.item[nLine1].discountdetail = [];
+				objRecSub.item[nLine1].description = recPrint.getSublistValue({sublistId: 'item', fieldId: 'description', line: nLine1}).replace(/(?:\r\n|\r|\n)/g, '<br />').replace('&', '&amp;');
+				idLastItem = nLine1;
+				idLastDiscount = -1;
+
 			}
 
 		}

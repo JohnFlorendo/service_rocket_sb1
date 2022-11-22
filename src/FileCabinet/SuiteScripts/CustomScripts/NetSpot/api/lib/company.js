@@ -33,8 +33,12 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 		};
 
 		create = function (option) {
-
-			var retMe = option;
+			
+			var retMe = {
+				status: '',
+				request: option
+			};
+			
 			option.action = 'create';
 
 			try {
@@ -54,28 +58,14 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 				if (resp.code == 200 || resp.code == 201) {
 
 					var dDate = new Date();
-
 					var objBody = JSON.parse(resp.body);
 
-					retMe.result = {
-						status: 'SUCCESS',
+					retMe.status = 'SUCCESS';
+					
+					retMe.response = {
 						id: objBody.id,
-						message: 'Hubpsot Deal Created ' + (new Date()).toString()
+						message: 'Hubpsot Company Created ' + (new Date()).toString()
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.message
-					});
-					retMe.record.setValue({
-						fieldId: 'custbody_hubspot_id',
-						value: objBody.id
-					});
-
-					retMe.record.setValue({
-						fieldId: 'custbody_hubspot_hs_lastmodifieddate',
-						value: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString()
-					});
 				}
 				else {
 
@@ -90,48 +80,36 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 						objBody.message = resp.body;
 					}
 
-					retMe.result = {
-						status: 'FAILED',
+					retMe.status = 'FAILED';
+					retMe.response = {
 						message: resp.code + ': ' + objBody.message
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.status + ': ' + retMe.result.message
-					});
 				}
 			}
 
 			catch (err) {
-
-				retMe.result = {
-					status: 'FAILED',
-					message: err
+				
+				retMe.status = 'FAILED';
+				retMe.response = {
+					message : 'ERROR: ' + err
 				};
-
-				retMe.record.setValue({
-					fieldId: 'custbody_nshs_logs',
-					value: retMe.result.status + ': ' + retMe.result.message
-				});
-
 			}
-
-			log.audit({
-				title: 'deal create' + retMe.record.id,
-				details: 'request: ' + JSON.stringify(objPayload) + ' response: ' + JSON.stringify(retMe.result)
-			});
-
+			
 			return retMe;
 		};
 
 		update = function (option) {
 
-			var retMe = option;
+			
+			var retMe = {
+				action: 'update',
+				request: option
+			};
+			
 			option.action = 'update';
 
 			try {
 
-				//Hubspot Batch Update Payload {inputs: [{deals}]}
 				var objPayload = { inputs: [getPayload(option)] };
 
 				var resp = https.post({
@@ -146,25 +124,12 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 
 				if (resp.code == 200 || resp.code == 201) {
 
-					var dDate = new Date();
-
 					var objBody = JSON.parse(resp.body).results[0];
-
-					retMe.result = {
-						status: 'SUCCESS',
-						id: objBody.id,
-						message: 'Hubpsot Deal Updated ' + (new Date()).toString()
+					
+					retMe.status = 'SUCCESS';
+					retMe.response = {
+						data: objBody
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.message
-					});
-
-					retMe.record.setValue({
-						fieldId: 'custbody_hubspot_hs_lastmodifieddate',
-						value: new Date(objBody.properties.hs_lastmodifieddate).getTime().toString()
-					});
 				}
 				else {
 
@@ -179,43 +144,29 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 						objBody.message = resp.body;
 					}
 
-					retMe.result = {
-						status: 'FAILED',
+					retMe.status = 'FAILED';
+					retMe.response = {
 						message: resp.code + ': ' + objBody.message
 					};
-
-					retMe.record.setValue({
-						fieldId: 'custbody_nshs_logs',
-						value: retMe.result.status + ': ' + retMe.result.message
-					});
 				}
 			}
 
 			catch (err) {
 
-				retMe.result = {
-					status: 'FAILED',
-					message: err
+				retMe.status = 'FAILED';
+				retMe.response = {
+					message: resp.code + ': ' + objBody.message
 				};
-
-				retMe.record.setValue({
-					fieldId: 'custbody_nshs_logs',
-					value: retMe.result.status + ': ' + retMe.result.message
-				});
-
 			}
-
-			log.audit({
-				title: 'deal update' + retMe.record.id,
-				details: 'request: ' + JSON.stringify(objPayload) + ' response: ' + JSON.stringify(retMe.result)
-			});
-
+			
 			return retMe;
 		};
 
 		get = function (option) {
 
-			var retMe = option;
+			var retMe = {
+				request: option
+			};
 
 			try {
 
@@ -240,14 +191,19 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 
 				if (resp.code == 200 || resp.code == 201) {
 
-					var dDate = new Date();
-
 					var objBody = JSON.parse(resp.body);
+					
+					retMe.status = 'SUCCESS';
 
 					retMe.result = {
 						status: 'SUCCESS',
-						data: objBody,
+						data: objBody
 					};
+					
+					retMe.response = {
+						data: objBody							
+					};
+					
 				}
 				else {
 
@@ -262,17 +218,30 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 						objBody.message = resp.body;
 					}
 
+					retMe.status = 'FAILED';
+					
 					retMe.result = {
 						status: 'FAILED',
 						message: resp.code + ': ' + objBody.message
 					};
+					
+					retMe.response = {
+						message: resp.code + ': ' + objBody.message							
+					};
+					
 				}
 			}
 			catch (err) {
 
+				retMe.status = 'FAILED';
+				
 				retMe.result = {
 					status: 'FAILED',
 					message: err
+				};
+				
+				retMe.response = {
+					message: resp.code + ': ' + objBody.message							
 				};
 			}
 
@@ -286,57 +255,35 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 
 			try {
 
-				var objPayload = {
-//					"filterGroups": [{
-//
-//						"filters": [{
-//							"propertyName": "createdate",
-//							"operator": "GTE",
-//							"value": (moment().subtract(1, 'days')).valueOf()
-//						}],
-//						"filters": [{
-//							"propertyName": "hs_lastmodifieddate",
-//							"operator": "GTE",
-//							"value": (moment().subtract(1, 'days')).valueOf()
-//						}]
-//						
-//					}],
-					properties: [
-						"name",
-						"domain",
-						"nsid"
-					],
-					sorts: [
-						"createdAt"
-					],
-					limit: 100,
-					after: 0
-
-				};
 				var sNext = 'firstrun';
 
 				while (sNext != '' && runtime.getCurrentScript().getRemainingUsage() > 100) {
 
-					var resp = https.post({
-						url: "https://api.hubapi.com/crm/v3/objects/companies/search?hapikey={custsecret_hubspot_apikey}",
-						body: JSON.stringify(objPayload),
-						headers: {
-							'Content-Type': 'application/json',
-							'Accept': '*/*'
+					var resp = promise({
+						function: function(){
+							return https.post({
+								url: "https://api.hubapi.com/crm/v3/objects/companies/search?hapikey={custsecret_hubspot_apikey}",
+								body: JSON.stringify(option.request),
+								headers: {
+									'Content-Type': 'application/json',
+									'Accept': '*/*'
+								},
+								credentials: ['custsecret_hubspot_apikey']
+							});
 						},
-						credentials: ['custsecret_hubspot_apikey']
-					});
+						delay: 1000
+					})
 
 					if (resp.code == 200 || resp.code == 201) {
-
-						var dDate = new Date();
+						
 						var objBody = JSON.parse(resp.body);
 						arrCompanies = arrCompanies.concat(objBody.results);;
 
 						if (objBody.paging != undefined) {
+
 							if (objBody.paging.next.after) {
 								sNext = objBody.paging.next.after;
-								objPayload.after = objBody.paging.next.after;
+								option.request.after = objBody.paging.next.after;
 							}
 							else {
 								sNext = '';
@@ -346,7 +293,7 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 							sNext = '';
 						}
 
-						retMe.result = {
+						retMe.response = {
 							status: 'SUCCESS',
 							data: arrCompanies
 						};
@@ -364,9 +311,10 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 							objBody.message = resp.body;
 						}
 
-						retMe.result = {
+						retMe.response = {
 							status: 'FAILED',
-							message: resp.code + ': ' + objBody.message
+							message: resp.code + ': ' + objBody.message,
+							data: arrCompanies
 						};
 					}
 				}
@@ -374,19 +322,24 @@ define(['N/https', 'N/record', 'N/runtime', '../../../Helper/nsmapjson', '../../
 
 			catch (err) {
 
-				retMe.result = {
+				retMe.response = {
 					status: 'FAILED',
 					message: err
 				};
 			}
 
-			log.audit({
-				title: 'search',
-				details: 'retMe: ' + JSON.stringify(retMe)
-			});
-
 			return retMe;
 		};
+
+		promise = function (option){
+			var date = new Date();
+			date.setMilliseconds(date.getMilliseconds() + option.delay);
+			while(new Date() < date){
+			}
+			
+			return option.function();
+		}
+
 
 		return {
 			create: create,

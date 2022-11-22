@@ -89,10 +89,19 @@ define(['N/search', 'N/record'],
         }
 
         function setLineItem(currRecord, indx, valueField) {
+            var inEstimatedAmount = 0;
             currRecord.selectLine({
                 sublistId: 'item',
                 line: indx
             });
+
+            var inQuantity = currRecord.getCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: 'quantity'
+            });
+
+            inEstimatedAmount = inQuantity * valueField.inEstimatedRate;
+
             currRecord.setCurrentSublistValue({
                 sublistId: 'item',
                 fieldId: 'item',
@@ -108,7 +117,8 @@ define(['N/search', 'N/record'],
             currRecord.setCurrentSublistValue({
                 sublistId: 'item',
                 fieldId: 'amount',
-                value: valueField.inEstimatedAmount,
+                // value: valueField.inEstimatedAmount,
+                value: inEstimatedAmount,
                 ignoreFieldChange: true
             });
 

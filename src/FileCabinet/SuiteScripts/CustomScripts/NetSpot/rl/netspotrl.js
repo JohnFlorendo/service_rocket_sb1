@@ -3,12 +3,12 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/search', '../api/netspot', '../api/project'],
+define(['N/record', 'N/search', 'N/https', '../api/netspot', '../api/project'],
 /**
  * @param {record} record
  * @param {search} search
  */
-function(record, search, netspot, project) {
+function(record, search, https, netspot, project) {
    
     /**
      * Function called upon sending a GET request to the RESTlet.
@@ -59,7 +59,11 @@ function(record, search, netspot, project) {
     function doPost(requestBody) {
     	
     	try{
-	    	log.audit({title: 'doPost', details: 'entry ' + JSON.stringify(requestBody)});
+    		
+	    	log.audit({
+	    		title: 'doPost', 
+	    		details: 'entry ' + JSON.stringify(requestBody)
+	    	});
 	    	
 	    	var retMe = requestBody;
 	    	
@@ -68,6 +72,56 @@ function(record, search, netspot, project) {
 	    		if(requestBody.action == 'create' && requestBody.record == 'pmojob'){
 	    			log.audit({title: 'doPost', details: 'creating pmo job'});
 	    			retMe = project.createPmo(requestBody);	
+	    		}
+	    		else if(requestBody.action == 'create' && requestBody.record == 'opportunity'){
+	    			
+	    			retMe = netspot.createOpportunity(requestBody);
+	    			
+	    			if(retMe.status == 'FAILED'){
+	    				
+	    				var objPayload = {
+	    						inputs : [ {
+	    							id : requestBody.id,
+	    							properties : {
+	    								dealstage: 14514079 //
+	    							}
+	    						} ]
+	    					};
+	    					
+	    				var resp = https.post({
+	    							url : "https://api.hubapi.com/crm/v3/objects/deals/batch/update?hapikey={custsecret_hubspot_apikey}",
+	    							body : JSON.stringify(objPayload),
+	    							headers : {
+	    								'Content-Type' : 'application/json',
+	    								'Accept' : '*/*'
+	    							},
+	    							credentials : [ 'custsecret_hubspot_apikey' ]
+	    						});
+	    				
+	    				var nsptNotes = netspot.createNotes({
+	    					notes: {
+	    						data: {
+	    							properties : {
+	    								hs_note_body: retMe.response.message.name + ': ' + retMe.response.message.message
+	    							}
+	    						}
+	    					},
+	    					associate:{
+	    						data: {
+	    							to: 'deal',
+	    							toid: requestBody.id,
+	    							type: 'note_to_deal'
+	    						}
+	    					}
+	    				});
+	    				
+	    				log.audit({
+	    					title: 'doPost', 
+	    					details: 'nsptNotes ' + JSON.stringify(nsptNotes)
+	    				});
+
+	    			};
+	    			
 	    		}
 	    		else if(requestBody.associatedObjectType == 'DEAL'){
 	    			retMe = netspot.updateOpportunity(requestBody);
@@ -81,14 +135,25 @@ function(record, search, netspot, project) {
 	    	}
 	    	
 	    	
-	    	log.audit({title: 'doPost', details: 'response ' + JSON.stringify(retMe)});
+	    	log.audit({
+	    		title: 'doPost', 
+	    		details: 'response ' + JSON.stringify(retMe)
+	    	});
 	    	
 	    	return retMe;
 	    	
 	    }
 		catch(err){
-			log.audit({title: 'doPost', details: 'error ' + err});
-			return {'message': 'error ' +  err};
+			
+			log.audit({
+				title: 'doPost', 
+				details: 'error ' + err
+			});
+						
+			return {
+				status: 'FAILED',
+				response: 'error ' +  err
+			};
 		}
     }
 

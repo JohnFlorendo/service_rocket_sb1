@@ -1,4 +1,4 @@
-define(['N/email', 'N/file', 'N/record', 'N/runtime', 'N/search', '../api/lib/action','../api/lib/approvalmxtaccess'],
+define(['N/email', 'N/file', 'N/record', 'N/runtime', 'N/search', '../api/lib/action', '../api/lib/approvalmxtaccess', '../api/lib/displaytype', '../api/lib/button'],
     /**
      * @param {email} email
      * @param {file} file
@@ -6,7 +6,7 @@ define(['N/email', 'N/file', 'N/record', 'N/runtime', 'N/search', '../api/lib/ac
      * @param {runtime} runtime
      * @param {search} search
      */
-    function (email, file, record, runtime, search, action,approvalmxtaccess) {
+    function (email, file, record, runtime, search, action, approvalmxtaccess, displaytype, button) {
 
         initialize = function (option) {
             return action.initialize(option);
@@ -48,8 +48,20 @@ define(['N/email', 'N/file', 'N/record', 'N/runtime', 'N/search', '../api/lib/ac
             return action.current(option);
         };
 
-        getRequisitionAdminAccess= function(option){
+        getRequisitionAdminAccess = function (option) {
             return approvalmxtaccess.getRequisitionAdminAccess(option);
+        }
+
+        fieldDisabled = function (form) {
+            return displaytype.disabled(form);
+        }
+
+        buttons = function (option) {
+            return button.createButton(option);
+        }
+
+        buttonApproval = function (newRec) {
+            return button.approveRejectButton(newRec);
         }
 
         return {
@@ -60,10 +72,13 @@ define(['N/email', 'N/file', 'N/record', 'N/runtime', 'N/search', '../api/lib/ac
             reject: reject,
             current: current,
             cancel: cancel,
-            procurementReview:procurementReview,
-            spendScheduleUpdated:spendScheduleUpdated,
-            dataChecked:dataChecked,
-            getRequisitionAdminAccess:getRequisitionAdminAccess
+            procurementReview: procurementReview,
+            spendScheduleUpdated: spendScheduleUpdated,
+            dataChecked: dataChecked,
+            getRequisitionAdminAccess: getRequisitionAdminAccess,
+            fieldDisabled: fieldDisabled,
+            buttons: buttons,
+            buttonApproval: buttonApproval
         };
 
     });

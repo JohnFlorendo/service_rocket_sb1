@@ -41,11 +41,6 @@ function() {
             			mapping: mapping[key].mapping,
             			value: value
             		});
-            		
-                    log.audit({
-                        title: 'nsmapjson',
-                        details: 'mapValue: ' + sValue
-                    });
             	}
             	catch(err){
             		
@@ -264,6 +259,31 @@ function() {
             
 			data = updateData(data, key, value);
 			
+			return data;
+		}
+		else if(mapping[key].hasOwnProperty('arrayvalue')) {
+			var value = []
+			var lineCount = record.getLineCount({
+				sublistId: mapping[key].arrayvalue.sublistid
+			})
+			
+			for(var line=0; line<lineCount; line++) {
+				value.push(
+					mapping[key].arrayvalue.field == 'value'? 
+					record.getSublistValue({
+						sublistId: mapping[key].arrayvalue.sublistid,
+						fieldId: mapping[key].arrayvalue.field.value,
+						line: line
+					}): record.getSublistText({
+						sublistId: mapping[key].arrayvalue.sublistid,
+						fieldId: mapping[key].arrayvalue.field.text,
+						line: line
+					})
+				)
+			}
+
+			data = updateData(data, key, value);
+
 			return data;
 		}
         else {

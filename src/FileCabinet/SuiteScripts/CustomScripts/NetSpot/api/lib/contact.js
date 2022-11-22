@@ -11,10 +11,10 @@ function(record, https, nsmapjson) {
 		var idMap;
 		
 		if (option.action == 'create') {
-			idMap = 128;
+			idMap = 127;
 		}
 		else if (option.action == 'update') {
-			idMap = 116;
+			idMap = 128;
 		}
 
 		var recMapping = record.load({
@@ -119,7 +119,10 @@ function(record, https, nsmapjson) {
 				inputs: [this.getPayload(option)] 
 			};
 		}
-		
+    	log.audit({
+    		title: 'contact', 
+    		details: 'request: ' + JSON.stringify(objPayload)
+    	});	
 
 		try {
 			

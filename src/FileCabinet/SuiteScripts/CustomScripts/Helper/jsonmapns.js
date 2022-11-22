@@ -22,8 +22,18 @@ define(['../Library/momentjs/moment'],
 
             try {
             	
-            	var value = eval('data.' + mapping[key].value) || '';
-            	
+            	var value = eval('data.' + mapping[key].value);
+
+                if(mapping[key].hasOwnProperty('default')){
+
+                	if(value  === null || value  === "" || value  === undefined){
+                		value = mapping[key].default;
+                	}
+                }
+                else{
+                    value = (value  === null || value  === "" || value  === undefined) == true ? '' : value  ;
+                }
+
             	if(mapping[key].hasOwnProperty('mapping')){
             		
             		value = mapping[key].mapping[value];
@@ -70,7 +80,7 @@ define(['../Library/momentjs/moment'],
                 
                 record.setValue({
                     fieldId: key,
-                    value: value || ''
+                    value: value 
                 });
             } 
             catch (err) {
@@ -504,7 +514,18 @@ define(['../Library/momentjs/moment'],
         if (mapping[key].hasOwnProperty('value')) {
         	
             try {
-            	 return eval('data.' + mapping[key].value) || '';
+            	var retMe =  eval('data.' + mapping[key].value) || '';
+            	
+            	if(mapping[key].hasOwnProperty('mapping')){
+            		
+            		retMe = mapping[key].mapping[retMe];
+            		
+                	if(retMe == undefined){
+                		retMe = mapping[key].mapping['default'];
+                	}
+            	}
+
+            	return retMe;
             } 
             catch (err){
                return '';

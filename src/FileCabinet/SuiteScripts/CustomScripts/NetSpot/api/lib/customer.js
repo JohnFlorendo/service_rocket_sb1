@@ -35,7 +35,7 @@ function (record, query, https, company, jsonmapns) {
 		
         	var recMapping = record.load({
 	            type: 'customrecord_integration_mapping',
-	            id: 127
+	            id: 125
 	        });
 	        
 	        var objCustomerMapping = JSON.parse(recMapping.getValue({

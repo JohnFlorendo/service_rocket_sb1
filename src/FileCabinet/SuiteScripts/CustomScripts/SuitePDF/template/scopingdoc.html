@@ -1,0 +1,249 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+
+<pdf>
+   <head>
+      <macrolist>
+         <macro id="nlheader">
+            <table style="width:100%; background-color: #221F1F;  margin-left: -30px; margin-right: -30px;">
+               <tr width="100%">
+                  <td style="padding-left: 0.4in; padding-top: 10px; padding-bottom: 10px;" width="50%"><img height="57px" src="https://3688201.app.netsuite.com/core/media/media.nl?id=63646&amp;c=3688201&amp;h=cc450deee8b4151f2fd5&amp;fcts=20200601062629&amp;whence=" width="80px" /></td>
+                  <td style="padding-right: 0.4in; padding-top: 15px; padding-bottom: 10px; ;" width="50%">
+                  </td>
+               </tr>
+            </table>
+         </macro>
+         <macro id="nlfooter" class="scopeheader">
+
+         </macro>
+      </macrolist>
+      <style>
+         *
+         {
+            font-family: NotoSans, Arial,sans-serif;
+         }
+         body {
+            font-family: 'Arial';
+            margin-left: 30px; 
+            margin-right: 30px; 
+         }
+          
+         .scopeheader {
+            font-family: 'Arial';
+            width: 100%; 
+            margin-top: 100px; 
+            font-size: 12pt;
+         }
+
+         .tasktable {
+            width: 100%; 
+            line-height: 150%;
+            margin-top: 10px; 
+            border: 1px solid black;
+            font-size: 12pt;
+            table-layout: fixed;
+         }
+
+         .tasktable td {
+            border-width: 1px;
+            padding: 5px;
+         }
+
+         .tasktable th {
+            border-width: 1px;
+            padding: 5px;
+         }
+
+         .sections {
+            width: 100%; 
+            line-height: 150%;
+            margin-top: 100px; 
+            font-size: 12pt;
+            table-layout: fixed;
+         }
+         .assumptions {
+            width: 100%; 
+            line-height: 150%;
+            margin-top: 100px; 
+            font-size: 12pt;
+            table-layout: fixed;
+         }
+
+      </style>
+   </head>
+   <body header="nlheader" header-height="10%" footer="nlfooter" footer-height="12%" padding="0px 0px 0px 0px" size="A4">
+
+      <table class="scopeheader">
+         <tr>
+            <td align="center" >
+               <span style="font-size: 30pt;"><b>Scoping Document</b></span>
+            </td>
+         </tr>
+         <tr>
+            <td align="center">
+               <h4>{{projectname}}</h4>
+            </td>
+         </tr>
+      </table>
+
+      <table class="scopeheader">
+         <tr>
+            <td align="left" >
+               <b>ServiceRocket Quote/Reference: {{quote}}</b>
+            </td>
+            <td align="left" >
+                
+            </td>
+         </tr>
+         <tr>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+            <td align="left" >
+               This agreement is made between:
+            </td>
+            <td align="left" >
+            </td>
+         </tr>
+         <tr>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+            <td align="left" >
+               <b>{{{customer}}}</b><br/>
+               {{custaddr1}}<br/>
+               {{{custaddr2}}}
+               {{custcity}}, {{custstate}} {{custzip}}<br/>
+               {{custcountry}}
+            </td>
+            <td align="left" >
+            </td>
+         </tr>
+         <tr>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+            <td align="left" >
+               <b>{{srentity}}</b><br/>
+               {{sraddr1}}<br/>
+               {{{sraddr2}}}
+               {{srcity}}, {{srstate}} {{srzip}}<br/>
+               {{srcountry}}
+            </td>
+            <td align="left" >
+            </td>
+         </tr>
+         <tr>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+            <td align="left" >
+               Date: {{date}}
+            </td>
+            <td align="left" >
+              
+            </td>
+         </tr>
+         <tr>
+            <td align="left" >
+               Author: {{salesrep}}
+            </td>
+            <td align="left" >
+               
+            </td>
+         </tr>
+         <tr>
+            <td align="left" >
+               Author Email: {{salesrepemail}}
+            </td>
+            <td align="left" >
+               
+            </td>
+         </tr>
+      </table>
+
+      <table class="scopeheader" style="margin-top: 180px;">
+         <tr>
+            <td align="left" >
+               <i>The Services provided by ServiceRocket ("ServiceRocket") as defined in this Scoping Document are provided pursuant to ServiceRocket's Consulting
+Services Terms and Conditions (the "Terms and Conditions") found at
+https://www.servicerocket.com/legaldocs/consulting-and-support-services-terms-and-conditions, which are incorporated herein by this reference. This
+Scoping Document provides only an estimate of the days necessary to complete the specification.</i>
+
+            </td>
+         </tr>
+      </table>
+
+      <table class="sections" page-break-after="avoid">
+         <tr>
+            <td align="left" >
+               <h2>Section - Overview</h2>
+            </td>
+         </tr>
+         <tr>
+            <td align="left">
+               {{{overview}}}
+            </td>
+         </tr>
+      </table>
+
+      {{#each tasks}}
+      <p>This table shows the breakdown effort for <b>{{{name}}}</b>.</p>
+      <table class="tasktable">
+         <thead style="background-color: #888888; color: #FFFFFF; font-weight: bold;">
+            <tr>
+               <th align="center" width="10%">
+                  S.No
+               </th>
+               <th align="center" width="20%">
+                  Task 
+               </th>
+               <th align="center" width="55%">
+                  Description 
+               </th>
+               <th align="center" width="15%">
+                  <p style="text-align: center; word-wrap: break-word">Estimate (Days)</p>
+               </th>
+            </tr>
+            <tr>
+               <th colspan="4" width="100%">
+                  {{name}}
+               </th>
+            </tr>
+         </thead>
+
+         <tbody>
+            {{#each this.tasks}}
+            <tr>
+               <td align="center" width="10%">
+                  {{math @index "+" 1}}
+               </td>
+               <td align="left" width="20%">
+                  <p style="text-align: left; word-wrap: break-word">{{name}}</p>
+               </td>
+               <td align="left" width="55%" >
+                  <p style="text-align: left;">{{{description}}}</p>
+               </td>
+               <td align="right" width="15%">
+                  {{totalwork}}
+               </td>
+            </tr>
+            {{/each}}
+            <tr>
+               <td align="left" colspan="3">
+                  Total
+               </td>
+               <td align="right" width="15%">
+                  {{totalwork}}
+               </td>
+            </tr>
+         </tbody>
+      </table>
+      {{/each}}
+      <h2>Specific Assumptions</h2>
+      {{{assumptions}}}
+   </body>
+</pdf>

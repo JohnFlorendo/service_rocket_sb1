@@ -1,7 +1,7 @@
 define([],
     function () {
 
-        setSpendScheduleFields = function (currRecord) {
+        resetValue = function (currRecord) {
             var arrFieldId = [
                 'custbody_ss_grand_total',
                 'custbody_ss_total_committed',
@@ -10,8 +10,16 @@ define([],
                 'custbody_ss_gst_amount',
                 'custbody_sr_proc_spend_updated',
                 'custbody_proc_data_completed_proceedpo',
-                'memo'
+                'memo',
+                'custbody_sr_expiry_date',
+                'custbody_payment_method_purchasing',
+                'custbody_sr_notes_finance'
             ]
+
+            currRecord.setValue({
+                fieldId: 'custbody_apm_approvalstatus',
+                value: 1
+            });
 
             for (var stField in arrFieldId) {
                 var stFieldId = arrFieldId[stField];
@@ -36,30 +44,29 @@ define([],
                         fieldId: stFieldId,
                         value: ''
                     });
+                } else if (stFields.type == 'date') {
+                    currRecord.setValue({
+                        fieldId: stFieldId,
+                        value: ''
+                    });
+                } else if (stFields.type == 'select') {
+                    currRecord.setValue({
+                        fieldId: stFieldId,
+                        value: ''
+                    });
+                } else if (stFields.type == 'textarea') {
+                    currRecord.setValue({
+                        fieldId: stFieldId,
+                        value: ''
+                    });
                 }
             }
         };
 
         estimatedAmount = function (currRecord) {
-            var inLine = currRecord.getLineCount({
-                sublistId: 'item'
-            });
-            for (var indx = 0; indx < inLine; indx++) {
-
-                var fldEstimatedAmount = currRecord.getSublistField({
-                    sublistId: 'item',
-                    fieldId: 'estimatedamount',
-                    line: indx
-                });
-                fldEstimatedAmount.isDisabled = true;
-
-                var fldEstimatedRate = currRecord.getSublistField({
-                    sublistId: 'item',
-                    fieldId: 'estimatedrate',
-                    line: indx
-                });
-                fldEstimatedRate.isMandatory = true;
-            }
+            var sublistName = currRecord.getSublist({sublistId: "item"});
+            var colEstimatedAmount = sublistName.getColumn({fieldId: "estimatedamount"});
+            colEstimatedAmount.isDisabled = true;
         }
 
         gstAmountField = function (newRec) {
@@ -85,10 +92,25 @@ define([],
             });
         }
 
+        estimatedRateMandatory = function (currRecord) {
+            var inEstimatedRate = currRecord.getCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: 'estimatedrate'
+            });
+
+            if (inEstimatedRate == 0) {
+                alert("Please enter a value for Estimated Rate.")
+                return false;
+            } else {
+                return true;
+            }
+        }
+
         return {
-            setSpendScheduleFields: setSpendScheduleFields,
+            resetValue: resetValue,
             estimatedAmount: estimatedAmount,
-            gstAmountField: gstAmountField
+            gstAmountField: gstAmountField,
+            estimatedRateMandatory: estimatedRateMandatory
         };
 
     });

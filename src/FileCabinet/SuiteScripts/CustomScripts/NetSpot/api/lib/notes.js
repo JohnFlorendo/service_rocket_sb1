@@ -57,6 +57,11 @@ function(record, query, https, moment) {
 			};
 		}
 
+		log.audit({
+    		title: 'notes.create', 
+    		details: 'option: ' + JSON.stringify(retMe)
+    	});
+		
 		return retMe;
 		
 	};
@@ -64,7 +69,7 @@ function(record, query, https, moment) {
 	associate = function(option) {
 		
 		//note_to_deal
-		option.action = 'create';
+		option.action = 'associate';
 		var retMe = {
 			request: option
 		};
@@ -106,6 +111,11 @@ function(record, query, https, moment) {
 				message: resp.code + ': ' + objBody.message
 			};
 		}
+		
+		log.audit({
+    		title: 'notes.associate', 
+    		details: 'option: ' + JSON.stringify(retMe)
+    	});
 
 		return retMe;
 	};

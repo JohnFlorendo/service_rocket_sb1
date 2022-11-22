@@ -11,6 +11,9 @@ function(record, query, search, netspot, moment) {
 		if(recProject.getValue('custentity4') != 7){
 			return true;
 		}
+		else if(recProject.getValue('parent') != recProject.getValue('customer')){
+			return true;
+		}
 		
 		var src = search.create({
 		    type: 'contact',
@@ -57,10 +60,6 @@ function(record, query, search, netspot, moment) {
 		var dPost = moment();
 		var arrData = [];
 		
-		if(recProject.getValue('custentity4') != 7){
-			return true;
-		}
-
 		if (recProject.getValue('entitystatus') == 2 && 
 				oldProject.getValue('entitystatus') != 2){
 			
@@ -108,11 +107,6 @@ function(record, query, search, netspot, moment) {
 			
 			if(arrSystnotes.length > 1){
 				
-				log.audit({
-	        		title: 'nps', 
-	        		details: 'not first closed'
-	        	});
-				
 				return;
 			}
 			
@@ -127,12 +121,7 @@ function(record, query, search, netspot, moment) {
 			
 			dInProgress = '';
 			dStart = '';
-			
-			log.audit({
-        		title: 'nps', 
-        		details: 'first execute/closed'
-        	});
-			
+		
 		}
 		else{
 			return;
@@ -152,7 +141,12 @@ function(record, query, search, netspot, moment) {
 	        values: recProject.id
 	    }));
 		
-		
+		src.filters.push(search.createFilter({
+	        name: 'role',
+	        operator: search.Operator.ANYOF,
+	        values: 5 //NPS Contact Role
+	    }));
+
 		src.run().each(function(result) {
 			
             arrData.push({
@@ -160,10 +154,10 @@ function(record, query, search, netspot, moment) {
                     name: 'custentity_hubspot_id'
                 }),
     		    properties: {
-    		    	psnpssurveystart: dStart,
-    		    	psnpssurveyinprogress: dInProgress,
-    		    	psnpssurveypost: dPost,
-    		    	send_ps_nps_survey_for_end_of_project_on_date: dClosed
+    		    	nps_startdate_ps: dStart,
+    		    	nps_inprogress_ps: dInProgress,
+    		    	nps_enddate_ps: dClosed,
+    		    	nps_pp_date_ps: dPost
     		    }
     		});
             
@@ -177,7 +171,7 @@ function(record, query, search, netspot, moment) {
 			}
 		});
 		
-		var x =1 ;
+		return retMe;
 	};
    
     return {
