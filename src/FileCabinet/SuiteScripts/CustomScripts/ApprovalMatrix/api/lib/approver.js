@@ -59,8 +59,6 @@ function(record, file, query, currency, employeetree) {
 			id: '../../sql/approvermanager.sql'
 		}).getContents();
 
-
-
 		var arrResults = employeetree.getManagers({
 			id: option.employee
 		});
@@ -89,7 +87,7 @@ function(record, file, query, currency, employeetree) {
         sSql = sSql.replace(regx, function(matched){
   		  return custParam[matched];
   		});
-		
+
     	var arrMatrix = query.runSuiteQL({
 			query: sSql
 		}).asMappedResults();

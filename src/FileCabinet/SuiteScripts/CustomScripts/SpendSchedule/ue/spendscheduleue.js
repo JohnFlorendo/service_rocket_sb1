@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  */
-define(['N/format', 'N/record', 'N/search', 'N/task', 'N/ui/message', 'N/ui/serverWidget', 'N/url', '../api/updatespendschedule'],
+define(['N/format', 'N/record', 'N/search', 'N/task', 'N/ui/message', 'N/ui/serverWidget', 'N/url', '../api/spendschedule'],
 
     (format, record, search, task, message, serverWidget, url, libFieldMapping) => {
         var Purchase_Order = 'purchaseorder';

@@ -3,9 +3,9 @@
  * @NScriptType UserEventScript
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/query', 'N/currency', 'N/redirect', '../../Library/handlebars', '../api/approvalmatrix', 'N/ui/message'],
+define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/query', 'N/currency', 'N/redirect', 'N/ui/message', '../../Library/handlebars', '../api/approvalmatrix', '../api/lib/matrix'],
 
-    function (record, file, serverWidget, runtime, error, query, currency, redirect, handlebars, approvalmatrix, message) {
+    function (record, file, serverWidget, runtime, error, query, currency, redirect, message, handlebars, approvalmatrix, matrix) {
 
         const requisitionRole = [1181, 1349]; //Requisition role
         const accountantRole = [1017, 1336]; //Rocketeer Accountant role
@@ -291,13 +291,6 @@ define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/qu
                                 });
                             }
                             log.audit('pending', newRec.getValue('nextapprover'));
-                            if (newRec.getValue('nextapprover') == -1) {
-                                form.addPageInitMessage({
-                                    type: message.Type.WARNING,
-                                    title: 'WARNING:',
-                                    message: 'No one in your chain of command has sufficient spending limit to approve this transaction. Only the Procurement team will be able to Approve the Purchase Requisition.'
-                                });
-                            }
                         }
                         break;
 
@@ -311,14 +304,6 @@ define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/qu
                                 newRec: newRec,
                                 arrButtons: arrButtons
                             });
-                            log.audit('approval', newRec.getValue('nextapprover'));
-                            if (newRec.getValue('nextapprover') == -1) {
-                                form.addPageInitMessage({
-                                    type: message.Type.WARNING,
-                                    title: 'WARNING:',
-                                    message: 'No one in your chain of command has sufficient spending limit to approve this transaction. Only the Procurement team will be able to Approve the Purchase Requisition.'
-                                });
-                            }
                         }
                         break;
 
@@ -396,14 +381,6 @@ define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/qu
                             }).defaultValue = stTitleLabel;
                         }
 
-                        if (newRec.getValue('nextapprover') == -1) {
-                            form.addPageInitMessage({
-                                type: message.Type.WARNING,
-                                title: 'WARNING:',
-                                message: 'No one in your chain of command has sufficient spending limit to approve this transaction. Only the Procurement team will be able to Approve the Purchase Requisition.'
-                            });
-                        }
-
                         break;
                 }
 
@@ -458,117 +435,44 @@ define(['N/record', 'N/file', 'N/ui/serverWidget', 'N/runtime', 'N/error', 'N/qu
                     fldApprovalStatus.updateDisplayType({
                         displayType: serverWidget.FieldDisplayType.NORMAL
                     });
-                } else {
-                    var fldApprovalStatus = form.getField('custbody_apm_approvalstatus');
-
-                    fldApprovalStatus.updateDisplayType({
-                        displayType: serverWidget.FieldDisplayType.INLINE
-                    });
                 }
 
             }
         }
 
-        /**
-         * Function definition to be triggered before record is loaded.
-         *
-         * @param {Object} scriptContext
-         * @param {Record} scriptContext.newRecord - New record
-         * @param {Record} scriptContext.oldRecord - Old record
-         * @param {string} scriptContext.type - Trigger type
-         * @Since 2015.2
-         */
         function beforeSubmit(scriptContext) {
         }
 
-        /**
-         * Function definition to be triggered before record is loaded.
-         *
-         * @param {Object} scriptContext
-         * @param {Record} scriptContext.newRecord - New record
-         * @param {Record} scriptContext.oldRecord - Old record
-         * @param {string} scriptContext.type - Trigger type
-         * @Since 2015.2
-         */
         function afterSubmit(scriptContext) {
             var newRec = scriptContext.newRecord;
             if (scriptContext.type == scriptContext.UserEventType.CREATE) {
-                var userId = runtime.getCurrentUser().id;
-                var userRole = runtime.getCurrentUser().role;
-
-                var isPRAdmin = requisitionRole.indexOf(userRole) != -1;
-                var isRocketeerAccountant = accountantRole.indexOf(userRole) != -1;
-
-                if ((isPRAdmin || isRocketeerAccountant) && newRec.getValue('entity') != userId) {
-                    var objMatrix = {};
-
-                    var sSql = file.load({
-                        // id: 303650 //matrix.sql
-                        id: '../sql/matrix.sql'
-                    }).getContents();
-
-                    var custParam = {
-                        paramrecord: newRec.type,
-                    };
-
-                    var regx = new RegExp(Object.keys(custParam).join("|"), "gi");
-                    sSql = sSql.replace(regx, function (matched) {
-                        return custParam[matched];
-                    });
-
-                    var arrMatrix = query.runSuiteQL({
-                        query: sSql
-                    }).asMappedResults();
-
-
-                    if (arrMatrix.length > 0) {
-                        objMatrix = arrMatrix[0];
-                        newRec.setValue({
-                            fieldId: objMatrix.matrixfield,
-                            value: objMatrix.matrix
-                        });
-                        newRec.setValue({
-                            fieldId: objMatrix.levelfield,
-                            value: 0
-                        });
-                    }
-
-                    log.audit('rec.getValue(objMatrix.matrixfield)',newRec.getValue(objMatrix.matrixfield))
-                    approvalmatrix.submit({
-                        record: newRec.type,
-                        recordid: newRec.id,
-                        employee: newRec.getValue('entity'),
-                        matrix: newRec.getValue(objMatrix.matrixfield),
-                        amount: newRec.getValue(objMatrix.amountfield) * currency.exchangeRate({
-                            source: newRec.getValue('currency'),
-                            target: 'USD',
-                            date: new Date()
-                        })
-                    });
-                    redirect.toRecord({
-                        type: newRec.type,
-                        id: newRec.id
-                    });
-                } else {
-                    approvalmatrix.initialize({
-                        record: newRec.type,
-                        recordid: newRec.id
-                    });
-                }
-
+                approvalmatrix.initialize({
+                    record: newRec.type,
+                    recordid: newRec.id,
+                    requisitionRole: requisitionRole,
+                    accountantRole: accountantRole,
+                    requestor: newRec.getValue('entity'),
+                    newRec: newRec
+                });
             } else if (scriptContext.type == scriptContext.UserEventType.EDIT
                 && runtime.executionContext === runtime.ContextType.USER_INTERFACE) {
+                var userRole = runtime.getCurrentUser().role;
+                var isPRAdmin = requisitionRole.indexOf(userRole) != -1;
 
                 var sStatus = approvalmatrix.current({
                     record: newRec.type,
                     recordid: newRec.id
                 });
 
-                if (sStatus == 'pending' || sStatus == 'rejected' || sStatus == 'approval') {
+                if ((sStatus == 'pending' || sStatus == 'rejected' || sStatus == 'approval') && !isPRAdmin) {
 
                     approvalmatrix.initialize({
                         record: newRec.type,
-                        recordid: newRec.id
+                        recordid: newRec.id,
+                        requisitionRole: requisitionRole,
+                        accountantRole: accountantRole,
+                        requestor: newRec.getValue('entity'),
+                        newRec: newRec
                     });
                 }
             }
